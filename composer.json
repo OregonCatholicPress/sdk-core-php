@@ -1,14 +1,14 @@
 {
-    "name": "paypal/sdk-core-php",
+    "name": "oregoncatholicpress/sdk-core-php",
     "description": "PayPal Core SDK for PHP",
-    "keywords": ["paypal", "php", "sdk"],
+    "keywords": ["oregoncatholicpress", "paypal", "php", "sdk"],
     "type": "library",
-    "homepage": "https://github.com/paypal/sdk-core-php",
+    "homepage": "https://github.com/OregonCatholicPress/sdk-core-php",
     "license": "Apache-2.0",
     "authors": [
         {
             "name": "PayPal",
-            "homepage": "https://github.com/paypal/sdk-core-php/contributors"
+            "homepage": "https://github.com/OregonCatholicPress/sdk-core-php/contributors"
         }
     ],
     "require": {
