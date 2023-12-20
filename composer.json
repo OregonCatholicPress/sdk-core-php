@@ -19,8 +19,8 @@
         "phpunit/phpunit": "^4.8.35"
     },
     "autoload": {
-        "psr-0": {
-            "PayPal": "lib/"
+        "psr-4": {
+            "PayPal": "lib/Paypal"
         }
     }
 }
