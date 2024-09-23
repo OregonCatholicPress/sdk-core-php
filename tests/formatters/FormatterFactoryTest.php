@@ -1,21 +1,21 @@
 <?php
+
 use PayPal\Formatter\FormatterFactory;
 use PHPUnit\Framework\TestCase;
-class FormatterFactoryTest extends TestCase {
 
-	/**
-	 * @test
-	 */
-	public function testValidBinding() {
-		$this->assertEquals('PayPal\Formatter\PPNVPFormatter', get_class(FormatterFactory::factory('NV')));
-		$this->assertEquals('PayPal\Formatter\PPSOAPFormatter', get_class(FormatterFactory::factory('SOAP')));
-	}
+class FormatterFactoryTest extends TestCase
+{
+    #[PHPUnit\Framework\Attributes\Test]
+    public function testValidBinding()
+    {
+        $this->assertEquals(PayPal\Formatter\PPNVPFormatter::class, FormatterFactory::factory('NV')::class);
+        $this->assertEquals(PayPal\Formatter\PPSOAPFormatter::class, FormatterFactory::factory('SOAP')::class);
+    }
 
-	/**
-	 * @test
-	 */
-	public function testInvalidBinding() {
-		$this->setExpectedException('\InvalidArgumentException');
-		FormatterFactory::factory('Unknown');
-	}
+    #[PHPUnit\Framework\Attributes\Test]
+    public function testInvalidBinding()
+    {
+        $this->expectException('\InvalidArgumentException');
+        FormatterFactory::factory('Unknown');
+    }
 }

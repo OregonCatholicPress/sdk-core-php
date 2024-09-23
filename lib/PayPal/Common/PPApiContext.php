@@ -1,4 +1,5 @@
 <?php
+
 namespace PayPal\Common;
 
 use PayPal\Core\PPConfigManager;
@@ -11,7 +12,6 @@ use PayPal\Core\PPXmlMessage;
  */
 class PPApiContext
 {
-
     /**
      *
      * @var array Dynamic SDK configuration
@@ -32,6 +32,7 @@ class PPApiContext
     public function setHttpHeaders(array $httpHeaders)
     {
         $this->httpHeaders = $httpHeaders;
+
         return $this;
     }
 
@@ -56,6 +57,7 @@ class PPApiContext
             return;
         }
         $this->httpHeaders[$name] = $value;
+
         return $this;
     }
 
@@ -66,6 +68,7 @@ class PPApiContext
     public function setSOAPHeader($SOAPHeader)
     {
         $this->SOAPHeader = $SOAPHeader;
+
         return $this;
     }
 
@@ -85,6 +88,7 @@ class PPApiContext
     public function setConfig(array $config)
     {
         $this->config = PPConfigManager::getConfigWithDefaults($config);
+
         return $this;
     }
 
@@ -101,11 +105,11 @@ class PPApiContext
     {
         if (!isset($this->config)) {
             return PPConfigManager::getInstance()->get($searchKey);
-        } else {
-            if (array_key_exists($searchKey, $this->getConfig())) {
-                return $this->config[$searchKey];
-            }
         }
+        if (array_key_exists($searchKey, $this->getConfig())) {
+            return $this->config[$searchKey];
+        }
+
         return false;
     }
 

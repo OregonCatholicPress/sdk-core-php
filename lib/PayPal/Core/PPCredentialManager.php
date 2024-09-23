@@ -1,4 +1,5 @@
 <?php
+
 namespace PayPal\Core;
 
 use PayPal\Auth\PPCertificateCredential;
@@ -12,10 +13,11 @@ class PPCredentialManager
 {
     private static $instance;
     //hashmap to contain credentials for accounts.
-    private $credentialHashmap = array();
+    private $credentialHashmap = [];
     /**
      * Contains the API username of the default account to use
      * when authenticating API calls.
+     *
      * @var string
      */
     private $defaultAccountName;
@@ -28,7 +30,7 @@ class PPCredentialManager
         try {
             $this->initCredential($config);
         } catch (Exception $e) {
-            $this->credentialHashmap = array();
+            $this->credentialHashmap = [];
             throw $e;
         }
     }
@@ -52,9 +54,9 @@ class PPCredentialManager
         if (array_key_exists($prefix, $config)) {
             $credArr = $this->config[$searchKey];
         } else {
-            $arr = array();
+            $arr = [];
             foreach ($config as $k => $v) {
-                if (strstr($k, $prefix)) {
+                if (strstr((string) $k, $prefix)) {
                     $arr[$k] = $v;
                 }
             }
@@ -62,11 +64,11 @@ class PPCredentialManager
             $credArr = $arr;
         }
 
-        $arr = array();
+        $arr = [];
         foreach ($config as $key => $value) {
-            $pos = strpos($key, '.');
-            if (strstr($key, "acct")) {
-                $arr[] = substr($key, 0, $pos);
+            $pos = strpos((string) $key, '.');
+            if (strstr((string) $key, "acct")) {
+                $arr[] = substr((string) $key, 0, $pos);
             }
         }
         $arrayPartKeys = array_unique($arr);
@@ -76,15 +78,16 @@ class PPCredentialManager
         }
 
         $key = $prefix . $suffix;
+
         while (in_array($key, $arrayPartKeys)) {
 
             if (isset($credArr[$key . ".Signature"])
               && $credArr[$key . ".Signature"] != null && $credArr[$key . ".Signature"] != ""
             ) {
 
-                $userName  = isset($credArr[$key . '.UserName']) ? $credArr[$key . '.UserName'] : "";
-                $password  = isset($credArr[$key . '.Password']) ? $credArr[$key . '.Password'] : "";
-                $signature = isset($credArr[$key . '.Signature']) ? $credArr[$key . '.Signature'] : "";
+                $userName  = $credArr[$key . '.UserName'] ?? "";
+                $password  = $credArr[$key . '.Password'] ?? "";
+                $signature = $credArr[$key . '.Signature'] ?? "";
 
                 $this->credentialHashmap[$userName] = new PPSignatureCredential($userName, $password, $signature);
                 if (isset($credArr[$key . '.AppId'])) {
@@ -94,30 +97,33 @@ class PPCredentialManager
               && $credArr[$key . ".CertPath"] != null && $credArr[$key . ".CertPath"] != ""
             ) {
 
-                $userName       = isset($credArr[$key . '.UserName']) ? $credArr[$key . '.UserName'] : "";
-                $password       = isset($credArr[$key . '.Password']) ? $credArr[$key . '.Password'] : "";
-                $certPassPhrase = isset($credArr[$key . '.CertKey']) ? $credArr[$key . '.CertKey'] : "";
-                $certPath       = isset($credArr[$key . '.CertPath']) ? $credArr[$key . '.CertPath'] : "";
+                $userName       = $credArr[$key . '.UserName'] ?? "";
+                $password       = $credArr[$key . '.Password'] ?? "";
+                $certPassPhrase = $credArr[$key . '.CertKey'] ?? "";
+                $certPath       = $credArr[$key . '.CertPath'] ?? "";
 
-                $this->credentialHashmap[$userName] = new PPCertificateCredential($userName, $password, $certPath,
-                  $certPassPhrase);
+                $this->credentialHashmap[$userName] = new PPCertificateCredential(
+                    $userName,
+                    $password,
+                    $certPath,
+                    $certPassPhrase
+                );
                 if (isset($credArr[$key . '.AppId'])) {
                     $this->credentialHashmap[$userName]->setApplicationId($credArr[$key . '.AppId']);
                 }
-            } elseif (isset($credArr[$key . ".ClientId"]) && isset($credArr[$key . ".ClientId"])) {
+            } elseif (isset($credArr[$key . ".ClientId"], $credArr[$key . ".ClientId"])    ) {
                 $userName                           = $key;
-                $this->credentialHashmap[$userName] = array(
-                  'clientId'     => $credArr[$key . ".ClientId"],
-                  'clientSecret' => $credArr[$key . ".ClientSecret"]
-                );
+                $this->credentialHashmap[$userName] = ['clientId'     => $credArr[$key . ".ClientId"], 'clientSecret' => $credArr[$key . ".ClientSecret"]];
             }
 
-            if (!empty($userName) && isset($credArr[$key . ".Subject"]) && trim($credArr[$key . ".Subject"]) != "") {
+            if (!empty($userName) && isset($credArr[$key . ".Subject"]) && trim((string) $credArr[$key . ".Subject"]) != "") {
                 $this->credentialHashmap[$userName]->setThirdPartyAuthorization(
-                  new PPSubjectAuthorization($credArr[$key . ".Subject"]));
-            } else if (!empty($userName) && (isset($credArr[$key . '.accessToken']) && isset($credArr[$key . '.tokenSecret']))) {
+                    new PPSubjectAuthorization($credArr[$key . ".Subject"])
+                );
+            } elseif (!empty($userName) && (isset($credArr[$key . '.accessToken'], $credArr[$key . '.tokenSecret'])    )) {
                 $this->credentialHashmap[$userName]->setThirdPartyAuthorization(
-                  new PPTokenAuthorization($credArr[$key . '.accessToken'], $credArr[$key . '.tokenSecret']));
+                    new PPTokenAuthorization($credArr[$key . '.accessToken'], $credArr[$key . '.tokenSecret'])
+                );
             }
 
             if (!empty($userName) && $this->defaultAccountName == null) {
@@ -140,13 +146,14 @@ class PPCredentialManager
 
         if ($userId == null) {
             $credObj = $this->credentialHashmap[$this->defaultAccountName];
-        } else if (array_key_exists($userId, $this->credentialHashmap)) {
+        } elseif (array_key_exists($userId, $this->credentialHashmap)) {
             $credObj = $this->credentialHashmap[$userId];
         }
 
         if (empty($credObj)) {
             throw new PPInvalidCredentialException("Invalid userId $userId");
         }
+
         return $credObj;
     }
 
@@ -154,5 +161,4 @@ class PPCredentialManager
     {
         trigger_error('Clone is not allowed.', E_USER_ERROR);
     }
-
 }

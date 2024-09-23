@@ -1,14 +1,17 @@
 <?php
+
 namespace PayPal\Auth\Oauth;
+
+use Override;
 
 /**
  * The PLAINTEXT method does not provide any security protection and SHOULD only be used
  * over a secure channel such as HTTPS. It does not use the Signature Base String.
  *   - Chapter 9.4 ("PLAINTEXT")
  */
-class OAuthSignatureMethodPLAINTEXT
-  extends OAuthSignatureMethod
+class OAuthSignatureMethodPLAINTEXT extends OAuthSignatureMethod
 {
+    #[Override]
     public function get_name()
     {
         return "PLAINTEXT";
@@ -23,12 +26,10 @@ class OAuthSignatureMethodPLAINTEXT
      * Please note that the second encoding MUST NOT happen in the SignatureMethod, as
      * OAuthRequest handles this!
      */
+    #[Override]
     public function build_signature($request, $consumer, $token)
     {
-        $key_parts = array(
-          $consumer->secret,
-          ($token) ? $token->secret : ""
-        );
+        $key_parts = [$consumer->secret, ($token) ? $token->secret : ""];
 
         $key_parts            = OAuthUtil::urlencode_rfc3986($key_parts);
         $key                  = implode('&', $key_parts);

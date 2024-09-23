@@ -1,29 +1,18 @@
 <?php
+
 namespace PayPal\Core;
 
 use PayPal\Formatter\FormatterFactory;
 
 class PPAPIService
 {
-
-    public $serviceName;
     public $apiMethod;
-    public $apiContext;
     private $logger;
-    private $handlers = array();
-    private $serviceBinding;
-    private $port;
 
-    public function __construct($port, $serviceName, $serviceBinding, $apiContext, $handlers = array())
+    public function __construct(private $port, public $serviceName, private $serviceBinding, public $apiContext, private $handlers = [])
     {
 
-        $this->apiContext  = $apiContext;
-        $this->serviceName = $serviceName;
-        $this->port        = $port;
-
-        $this->logger         = new PPLoggingManager(__CLASS__, $this->apiContext->getConfig());
-        $this->handlers       = $handlers;
-        $this->serviceBinding = $serviceBinding;
+        $this->logger         = new PPLoggingManager(self::class, $this->apiContext->getConfig());
     }
 
     public function setServiceName($serviceName)
@@ -47,6 +36,7 @@ class PPAPIService
      *
      * @param string    $apiMethod Name of the API operation (such as 'Pay')
      * @param PPRequest $params    Request object
+     * @param mixed     $request
      *
      * @return array containing request and response
      */
@@ -71,7 +61,7 @@ class PPAPIService
         $response = $connection->execute($payload);
         $this->logger->info("Response: $response");
 
-        return array('request' => $payload, 'response' => $response);
+        return ['request' => $payload, 'response' => $response];
     }
 
     private function runHandlers($httpConfig, $request)
@@ -85,13 +75,6 @@ class PPAPIService
 
     private function getOptions()
     {
-        return array(
-          'port'           => $this->port,
-          'serviceName'    => $this->serviceName,
-          'serviceBinding' => $this->serviceBinding,
-          'config'         => $this->apiContext->getConfig(),
-          'apiMethod'      => $this->apiMethod,
-          'apiContext'     => $this->apiContext
-        );
+        return ['port'           => $this->port, 'serviceName'    => $this->serviceName, 'serviceBinding' => $this->serviceBinding, 'config'         => $this->apiContext->getConfig(), 'apiMethod'      => $this->apiMethod, 'apiContext'     => $this->apiContext];
     }
 }

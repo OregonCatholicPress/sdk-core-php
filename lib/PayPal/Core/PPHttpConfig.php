@@ -1,39 +1,36 @@
 <?php
+
 namespace PayPal\Core;
 
 use PayPal\Exception\PPConfigurationException;
 
 class PPHttpConfig
 {
-
     /**
      * Some default options for curl
      * These are typically overridden by PPConnectionManager
      */
-    public static $DEFAULT_CURL_OPTS = array(
-      CURLOPT_SSLVERSION      => 6,
-      CURLOPT_CONNECTTIMEOUT  => 10,
-      CURLOPT_RETURNTRANSFER  => true,
-      CURLOPT_TIMEOUT         => 60,  // maximum number of seconds to allow cURL functions to execute
-      CURLOPT_USERAGENT       => 'PayPal-PHP-SDK',
-      CURLOPT_HTTPHEADER      => array(),
-      CURLOPT_SSL_VERIFYHOST  => 2,
-      CURLOPT_SSL_VERIFYPEER  => 1,
-      CURLOPT_SSL_CIPHER_LIST => 'TLSv1',
-    );
+    public static $DEFAULT_CURL_OPTS = [
+        CURLOPT_SSLVERSION      => 6,
+        CURLOPT_CONNECTTIMEOUT  => 10,
+        CURLOPT_RETURNTRANSFER  => true,
+        CURLOPT_TIMEOUT         => 60,
+        // maximum number of seconds to allow cURL functions to execute
+        CURLOPT_USERAGENT       => 'PayPal-PHP-SDK',
+        CURLOPT_HTTPHEADER      => [],
+        CURLOPT_SSL_VERIFYHOST  => 2,
+        CURLOPT_SSL_VERIFYPEER  => 1,
+        CURLOPT_SSL_CIPHER_LIST => 'TLSv1',
+    ];
 
     const HEADER_SEPARATOR = ';';
     const HTTP_GET = 'GET';
     const HTTP_POST = 'POST';
 
-    private $headers = array();
+    private $headers = [];
 
     private $curlOptions;
-
-    private $url;
-
-    private $method;
-    /***
+    /*
      * Number of times to retry a failed HTTP call
      */
     private $retryCount;
@@ -44,15 +41,13 @@ class PPHttpConfig
      * @param string $method  HTTP method (GET, POST etc) defaults to POST
      * @param array  $configs All Configurations
      */
-    public function __construct($url = null, $method = self::HTTP_POST, $configs = array())
+    public function __construct(private $url = null, private $method = self::HTTP_POST, $configs = [])
     {
-        $this->url         = $url;
-        $this->method      = $method;
-        $this->curlOptions = $this->getHttpConstantsFromConfigs($configs, 'http.') + self::$DEFAULT_CURL_OPTS;
+        $this->curlOptions = $this->getHttpConstantsFromConfigs('http.', $configs) + self::$DEFAULT_CURL_OPTS;
         // Update the Cipher List based on OpenSSL or NSS settings
         $curl       = curl_version();
-        $sslVersion = isset($curl['ssl_version']) ? $curl['ssl_version'] : '';
-        if (substr_compare($sslVersion, "NSS/", 0, strlen("NSS/")) === 0) {
+        $sslVersion = $curl['ssl_version'] ?? '';
+        if (substr_compare((string) $sslVersion, "NSS/", 0, strlen("NSS/")) === 0) {
             //Remove the Cipher List for NSS
             $this->removeCurlOption(CURLOPT_SSL_CIPHER_LIST);
         }
@@ -78,6 +73,7 @@ class PPHttpConfig
         if (array_key_exists($name, $this->headers)) {
             return $this->headers[$name];
         }
+
         return null;
     }
 
@@ -133,12 +129,13 @@ class PPHttpConfig
     /**
      * Set ssl parameters for certificate based client authentication
      *
-     * @param string $certPath - path to client certificate file (PEM formatted file)
+     * @param string     $certPath   - path to client certificate file (PEM formatted file)
+     * @param null|mixed $passPhrase
      */
     public function setSSLCert($certPath, $passPhrase = null)
     {
         $this->curlOptions[CURLOPT_SSLCERT] = realpath($certPath);
-        if (isset($passPhrase) && trim($passPhrase) != "") {
+        if (isset($passPhrase) && trim((string) $passPhrase) != "") {
             $this->curlOptions[CURLOPT_SSLCERTPASSWD] = $passPhrase;
         }
     }
@@ -188,6 +185,7 @@ class PPHttpConfig
 
     /**
      * @param integer $retry
+     * @param mixed   $retryCount
      */
     public function setHttpRetryCount($retryCount)
     {
@@ -217,13 +215,13 @@ class PPHttpConfig
      *
      * @return array
      */
-    public function getHttpConstantsFromConfigs($configs = array(), $prefix)
+    public function getHttpConstantsFromConfigs($prefix, $configs = [])
     {
-        $arr = array();
+        $arr = [];
         if ($prefix != null && is_array($configs)) {
             foreach ($configs as $k => $v) {
                 // Check if it startsWith
-                if (substr($k, 0, strlen($prefix)) === $prefix) {
+                if (str_starts_with($k, (string) $prefix)) {
                     $newKey = ltrim($k, $prefix);
                     if (defined($newKey)) {
                         $arr[constant($newKey)] = $v;
@@ -231,6 +229,7 @@ class PPHttpConfig
                 }
             }
         }
+
         return $arr;
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 namespace PayPal\Auth\Openid;
 
 use PayPal\Common\PPApiContext;
@@ -9,10 +10,8 @@ use PayPal\Transport\PPRestCall;
 /**
  * OpenIdConnect UserInfo Resource
  */
-class PPOpenIdUserinfo
-  extends PPModel
+class PPOpenIdUserinfo extends PPModel
 {
-
     /**
      * Subject - Identifier for the End-User at the Issuer.
      *
@@ -21,11 +20,13 @@ class PPOpenIdUserinfo
     public function setUserId($user_id)
     {
         $this->user_id = $user_id;
+
         return $this;
     }
 
     /**
      * Subject - Identifier for the End-User at the Issuer.
+     *
      * @return string
      */
     public function getUserId()
@@ -41,11 +42,13 @@ class PPOpenIdUserinfo
     public function setSub($sub)
     {
         $this->sub = $sub;
+
         return $this;
     }
 
     /**
      * Subject - Identifier for the End-User at the Issuer.
+     *
      * @return string
      */
     public function getSub()
@@ -61,11 +64,13 @@ class PPOpenIdUserinfo
     public function setName($name)
     {
         $this->name = $name;
+
         return $this;
     }
 
     /**
      * End-User's full name in displayable form including all name parts, possibly including titles and suffixes, ordered according to the End-User's locale and preferences.
+     *
      * @return string
      */
     public function getName()
@@ -81,11 +86,13 @@ class PPOpenIdUserinfo
     public function setGivenName($given_name)
     {
         $this->given_name = $given_name;
+
         return $this;
     }
 
     /**
      * Given name(s) or first name(s) of the End-User
+     *
      * @return string
      */
     public function getGivenName()
@@ -101,11 +108,13 @@ class PPOpenIdUserinfo
     public function setFamilyName($family_name)
     {
         $this->family_name = $family_name;
+
         return $this;
     }
 
     /**
      * Surname(s) or last name(s) of the End-User.
+     *
      * @return string
      */
     public function getFamilyName()
@@ -121,11 +130,13 @@ class PPOpenIdUserinfo
     public function setMiddleName($middle_name)
     {
         $this->middle_name = $middle_name;
+
         return $this;
     }
 
     /**
      * Middle name(s) of the End-User.
+     *
      * @return string
      */
     public function getMiddleName()
@@ -141,11 +152,13 @@ class PPOpenIdUserinfo
     public function setPicture($picture)
     {
         $this->picture = $picture;
+
         return $this;
     }
 
     /**
      * URL of the End-User's profile picture.
+     *
      * @return string
      */
     public function getPicture()
@@ -161,11 +174,13 @@ class PPOpenIdUserinfo
     public function setEmail($email)
     {
         $this->email = $email;
+
         return $this;
     }
 
     /**
      * End-User's preferred e-mail address.
+     *
      * @return string
      */
     public function getEmail()
@@ -181,11 +196,13 @@ class PPOpenIdUserinfo
     public function setEmailVerified($email_verified)
     {
         $this->email_verified = $email_verified;
+
         return $this;
     }
 
     /**
      * True if the End-User's e-mail address has been verified; otherwise false.
+     *
      * @return boolean
      */
     public function getEmailVerified()
@@ -201,11 +218,13 @@ class PPOpenIdUserinfo
     public function setGender($gender)
     {
         $this->gender = $gender;
+
         return $this;
     }
 
     /**
      * End-User's gender.
+     *
      * @return string
      */
     public function getGender()
@@ -221,11 +240,13 @@ class PPOpenIdUserinfo
     public function setBirthday($birthday)
     {
         $this->birthday = $birthday;
+
         return $this;
     }
 
     /**
      * End-User's birthday, represented as an YYYY-MM-DD format. They year MAY be 0000, indicating it is omited. To represent only the year, YYYY format would be used.
+     *
      * @return string
      */
     public function getBirthday()
@@ -241,11 +262,13 @@ class PPOpenIdUserinfo
     public function setZoneinfo($zoneinfo)
     {
         $this->zoneinfo = $zoneinfo;
+
         return $this;
     }
 
     /**
      * Time zone database representing the End-User's time zone
+     *
      * @return string
      */
     public function getZoneinfo()
@@ -261,11 +284,13 @@ class PPOpenIdUserinfo
     public function setLocale($locale)
     {
         $this->locale = $locale;
+
         return $this;
     }
 
     /**
      * End-User's locale.
+     *
      * @return string
      */
     public function getLocale()
@@ -281,11 +306,13 @@ class PPOpenIdUserinfo
     public function setLanguage($language)
     {
         $this->language = $language;
+
         return $this;
     }
 
     /**
      * End-User's language.
+     *
      * @return string
      */
     public function getLanguage()
@@ -301,11 +328,13 @@ class PPOpenIdUserinfo
     public function setVerified($verified)
     {
         $this->verified = $verified;
+
         return $this;
     }
 
     /**
      * End-User's verified status.
+     *
      * @return boolean
      */
     public function getVerified()
@@ -321,11 +350,13 @@ class PPOpenIdUserinfo
     public function setPhoneNumber($phone_number)
     {
         $this->phone_number = $phone_number;
+
         return $this;
     }
 
     /**
      * End-User's preferred telephone number.
+     *
      * @return string
      */
     public function getPhoneNumber()
@@ -336,17 +367,19 @@ class PPOpenIdUserinfo
     /**
      * End-User's preferred address.
      *
-     * @param \PayPal\Auth\Openid\PPOpenIdAddress $address
+     * @param PPOpenIdAddress $address
      */
     public function setAddress($address)
     {
         $this->address = $address;
+
         return $this;
     }
 
     /**
      * End-User's preferred address.
-     * @return \PayPal\Auth\Openid\PPOpenIdAddress
+     *
+     * @return PPOpenIdAddress
      */
     public function getAddress()
     {
@@ -361,11 +394,13 @@ class PPOpenIdUserinfo
     public function setVerifiedAccount($verified_account)
     {
         $this->verified_account = $verified_account;
+
         return $this;
     }
 
     /**
      * Verified account status.
+     *
      * @return boolean
      */
     public function getVerifiedAccount()
@@ -381,11 +416,13 @@ class PPOpenIdUserinfo
     public function setAccountType($account_type)
     {
         $this->account_type = $account_type;
+
         return $this;
     }
 
     /**
      * Account type.
+     *
      * @return string
      */
     public function getAccountType()
@@ -401,11 +438,13 @@ class PPOpenIdUserinfo
     public function setAgeRange($age_range)
     {
         $this->age_range = $age_range;
+
         return $this;
     }
 
     /**
      * Account holder age range.
+     *
      * @return string
      */
     public function getAgeRange()
@@ -421,11 +460,13 @@ class PPOpenIdUserinfo
     public function setPayerId($payer_id)
     {
         $this->payer_id = $payer_id;
+
         return $this;
     }
 
     /**
      * Account payer identifier.
+     *
      * @return string
      */
     public function getPayerId()
@@ -437,6 +478,7 @@ class PPOpenIdUserinfo
      * returns user details
      *
      * @path /v1/identity/openidconnect/userinfo
+     *
      * @method GET
      *
      * @param array        $params     (allowed values are access_token)
@@ -447,7 +489,7 @@ class PPOpenIdUserinfo
      */
     public static function getUserinfo($params, $apiContext = null)
     {
-        static $allowedParams = array('schema' => 1);
+        static $allowedParams = ['schema' => 1];
         if (is_null($apiContext)) {
             $apiContext = new PPApiContext();
         }
@@ -460,13 +502,15 @@ class PPOpenIdUserinfo
         $call       = new PPRestCall($apiContext);
         $ret        = new PPOpenIdUserinfo();
         $ret->fromJson(
-          $call->execute(array(new PPOpenIdHandler($apiContext)), $requestUrl, "GET", "",
-            array(
-              'Authorization' => "Bearer " . $params['access_token'],
-              'Content-Type'  => 'x-www-form-urlencoded'
+            $call->execute(
+                [new PPOpenIdHandler($apiContext)],
+                $requestUrl,
+                "GET",
+                "",
+                ['Authorization' => "Bearer " . $params['access_token'], 'Content-Type'  => 'x-www-form-urlencoded']
             )
-          )
         );
+
         return $ret;
     }
 }

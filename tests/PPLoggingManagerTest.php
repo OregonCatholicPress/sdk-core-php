@@ -1,6 +1,8 @@
 <?php
+
 use PayPal\Core\PPLoggingManager;
 use PHPUnit\Framework\TestCase;
+
 /**
  * Test class for PPLoggingManager.
  *
@@ -16,7 +18,8 @@ class PPLoggingManagerTest extends TestCase
      * Sets up the fixture, for example, opens a network connection.
      * This method is called before a test is executed.
      */
-    protected function setUp()
+    #[Override]
+    protected function setUp(): void
     {
         $this->object = new PPLoggingManager('InvoiceTest');
     }
@@ -25,41 +28,37 @@ class PPLoggingManagerTest extends TestCase
      * Tears down the fixture, for example, closes a network connection.
      * This method is called after a test is executed.
      */
-    protected function tearDown()
+    #[Override]
+    protected function tearDown(): void
     {
     }
 
-    /**
-     * @test
-     */
+    #[PHPUnit\Framework\Attributes\Test]
+    #[PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     public function testError()
     {
-    	 $this->object->error('Test Error Message');
+        $this->object->error('Test Error Message');
 
     }
 
-    /**
-     * @test
-     */
+    #[PHPUnit\Framework\Attributes\Test]
+    #[PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     public function testWarning()
     {
-         $this->object->warning('Test Warning Message');
+        $this->object->warning('Test Warning Message');
     }
 
-    /**
-     * @test
-     */
+    #[PHPUnit\Framework\Attributes\Test]
+    #[PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     public function testInfo()
     {
         $this->object->info('Test info Message');
     }
 
-    /**
-     * @test
-     */
+    #[PHPUnit\Framework\Attributes\Test]
+    #[PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     public function testFine()
     {
-       $this->object->fine('Test fine Message');
+        $this->object->fine('Test fine Message');
     }
 }
-?>

@@ -1,27 +1,28 @@
 <?php
+
 namespace PayPal\Auth\Oauth;
 
-class OAuthToken
-{
-    // access tokens and request tokens
-    public $key;
-    public $secret;
+use Override;
+use Stringable;
 
+class OAuthToken implements Stringable
+{
     /**
      * key = the token
      * secret = the token secret
+     *
+     * @param mixed $key
+     * @param mixed $secret
      */
-    function __construct($key, $secret)
+    public function __construct(public $key, public $secret)
     {
-        $this->key    = $key;
-        $this->secret = $secret;
     }
 
     /**
      * generates the basic string serialization of a token that a server
      * would respond to request_token and access_token calls with
      */
-    function to_string()
+    public function to_string()
     {
         return "oauth_token=" .
         OAuthUtil::urlencode_rfc3986($this->key) .
@@ -29,8 +30,9 @@ class OAuthToken
         OAuthUtil::urlencode_rfc3986($this->secret);
     }
 
-    function __toString()
+    #[Override]
+    public function __toString(): string
     {
-        return $this->to_string();
+        return (string) $this->to_string();
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 namespace PayPal\Formatter;
 
 use PayPal\Core\PPRequest;
@@ -13,14 +14,13 @@ use PayPal\Core\PPRequest;
  */
 interface IPPFormatter
 {
-
     /**
      *
      * @param PPRequest $request The request to format
      * @param array     $options Any formatter specific options
      *                           to be passed in
      */
-    public function toString($request, $options = array());
+    public function toString($request, $options = []);
 
-    public function toObject($string, $options = array());
+    public function toObject($string, $options = []);
 }

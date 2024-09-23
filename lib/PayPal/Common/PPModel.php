@@ -1,4 +1,5 @@
 <?php
+
 namespace PayPal\Common;
 
 /**
@@ -8,8 +9,7 @@ namespace PayPal\Common;
  */
 class PPModel
 {
-
-    private $_propMap = array();
+    private $_propMap = [];
 
     public function __get($key)
     {
@@ -33,16 +33,17 @@ class PPModel
 
     private function _convertToArray($param)
     {
-        $ret = array();
+        $ret = [];
         foreach ($param as $k => $v) {
             if ($v instanceof PPModel) {
                 $ret[$k] = $v->toArray();
-            } else if (is_array($v)) {
+            } elseif (is_array($v)) {
                 $ret[$k] = $this->_convertToArray($v);
             } else {
                 $ret[$k] = $v;
             }
         }
+
         return $ret;
     }
 
@@ -51,14 +52,14 @@ class PPModel
 
         foreach ($arr as $k => $v) {
             if (is_array($v)) {
-                $clazz = PPReflectionUtil::getPropertyClass(get_class($this), $k);
+                $clazz = PPReflectionUtil::getPropertyClass(static::class, $k);
 
                 if (PPArrayUtil::isAssocArray($v)) {
                     $o = new $clazz();
                     $o->fromArray($v);
                     $this->__set($k, $o);
                 } else {
-                    $arr = array();
+                    $arr = [];
                     foreach ($v as $nk => $nv) {
                         if (is_array($nv)) {
                             $o = new $clazz();
@@ -78,7 +79,7 @@ class PPModel
 
     public function fromJson($json)
     {
-        $this->fromArray(json_decode($json, true));
+        $this->fromArray(json_decode((string) $json, true));
     }
 
     public function toArray()

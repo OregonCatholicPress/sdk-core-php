@@ -1,10 +1,11 @@
 <?php
+
 namespace PayPal\Exception;
 
-class PPMissingCredentialException
-  extends \Exception
-{
+use Exception;
 
+class PPMissingCredentialException extends Exception
+{
     public function __construct($message = null, $code = 0)
     {
         parent::__construct($message, $code);
@@ -17,5 +18,4 @@ class PPMissingCredentialException
 
         return $errorMsg;
     }
-
 }

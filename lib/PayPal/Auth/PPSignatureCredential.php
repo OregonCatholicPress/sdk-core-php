@@ -1,28 +1,31 @@
 <?php
+
 namespace PayPal\Auth;
 
+use Override;
 use PayPal\Exception\PPMissingCredentialException;
 
 /**
  * API signature (3-token) based credentials
  */
-class PPSignatureCredential
-  extends IPPCredential
+class PPSignatureCredential extends IPPCredential
 {
-
     /**
      * API username
+     *
      * @var string
      */
     protected $userName;
 
     /**
      * API password
+     *
      * @var string
      */
     protected $password;
     /**
      * API Signature
+     *
      * @var string
      */
     protected $signature;
@@ -32,18 +35,20 @@ class PPSignatureCredential
      * Platform APIs - Not required for Express Checkout / MassPay / DCC etc
      * Application Ids are issued by PayPal.
      * Test application Ids are available for the sandbox environment
+     *
      * @var string
      */
     protected $applicationId;
 
     public function __construct($userName, $password, $signature)
     {
-        $this->userName  = trim($userName);
-        $this->password  = trim($password);
-        $this->signature = trim($signature);
+        $this->userName  = trim((string) $userName);
+        $this->password  = trim((string) $password);
+        $this->signature = trim((string) $signature);
         $this->validate();
     }
 
+    #[Override]
     public function validate()
     {
 
@@ -73,7 +78,7 @@ class PPSignatureCredential
 
     public function setApplicationId($applicationId)
     {
-        $this->applicationId = trim($applicationId);
+        $this->applicationId = trim((string) $applicationId);
     }
 
     public function getApplicationId()

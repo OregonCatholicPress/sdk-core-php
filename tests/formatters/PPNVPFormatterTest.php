@@ -1,35 +1,41 @@
 <?php
+
 use PayPal\Core\PPRequest;
 use PayPal\Formatter\PPNVPFormatter;
 use PHPUnit\Framework\TestCase;
-class PPNVPFormatterTest extends TestCase {
 
-	private $object;
+class PPNVPFormatterTest extends TestCase
+{
+    private $object;
 
-	public function setup() {
-		$this->object = new PPNVPFormatter();
-	}
-	/**
-	 * @test
-	 */
-	public function testValidSerializationCall() {
-		$data = new MockNVPObject();
-		$this->assertEquals($data->toNVPString(),
-				$this->object->toString(new PPRequest($data, 'NVP'))
-		);
-	}
+    #[Override]
+    public function setup(): void
+    {
+        $this->object = new PPNVPFormatter();
+    }
 
-	/**
-	 * @test
-	 */
-	public function testInvalidCall() {
-		$this->setExpectedException('BadMethodCallException');
-		$this->object->toObject('somestring');
-	}
+    #[PHPUnit\Framework\Attributes\Test]
+    public function testValidSerializationCall()
+    {
+        $data = new MockNVPObject();
+        $this->assertEquals(
+            $data->toNVPString(),
+            $this->object->toString(new PPRequest($data, 'NVP'))
+        );
+    }
+
+    #[PHPUnit\Framework\Attributes\Test]
+    public function testInvalidCall()
+    {
+        $this->expectException('BadMethodCallException');
+        $this->object->toObject('somestring');
+    }
 }
 
-class MockNVPObject {
-	public function toNVPString() {
-		return 'dummy nvp string';
-	}
+class MockNVPObject
+{
+    public function toNVPString()
+    {
+        return 'dummy nvp string';
+    }
 }

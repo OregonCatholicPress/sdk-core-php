@@ -1,17 +1,15 @@
 <?php
+
 namespace PayPal\Auth\Oauth;
 
 class OAuthServer
 {
     protected $timestamp_threshold = 300; // in seconds, five minutes
     protected $version = '1.0';             // hi blaine
-    protected $signature_methods = array();
+    protected $signature_methods = [];
 
-    protected $data_store;
-
-    function __construct($data_store)
+    public function __construct(protected $data_store)
     {
-        $this->data_store = $data_store;
     }
 
     public function add_signature_method($signature_method)
@@ -25,6 +23,8 @@ class OAuthServer
     /**
      * process a request_token request
      * returns the request token on success
+     *
+     * @param mixed $request
      */
     public function fetch_request_token(&$request)
     {
@@ -47,6 +47,8 @@ class OAuthServer
     /**
      * process an access_token request
      * returns the access token on success
+     *
+     * @param mixed $request
      */
     public function fetch_access_token(&$request)
     {
@@ -68,6 +70,8 @@ class OAuthServer
 
     /**
      * verify an api call, checks all the parameters
+     *
+     * @param mixed $request
      */
     public function verify_request(&$request)
     {
@@ -75,12 +79,15 @@ class OAuthServer
         $consumer = $this->get_consumer($request);
         $token    = $this->get_token($request, $consumer, "access");
         $this->check_signature($request, $consumer, $token);
-        return array($consumer, $token);
+
+        return [$consumer, $token];
     }
 
     // Internals from here
     /**
      * version 1
+     *
+     * @param mixed $request
      */
     private function get_version(&$request)
     {
@@ -93,11 +100,14 @@ class OAuthServer
         if ($version !== $this->version) {
             throw new OAuthException("OAuth version '$version' not supported");
         }
+
         return $version;
     }
 
     /**
      * figure out the signature with some defaults
+     *
+     * @param mixed $request
      */
     private function get_signature_method($request)
     {
@@ -111,20 +121,25 @@ class OAuthServer
             throw new OAuthException('No signature method parameter. This parameter is required');
         }
 
-        if (!in_array($signature_method,
-          array_keys($this->signature_methods))
+        if (!in_array(
+            $signature_method,
+            array_keys($this->signature_methods)
+        )
         ) {
             throw new OAuthException(
-              "Signature method '$signature_method' not supported " .
+                "Signature method '$signature_method' not supported " .
               "try one of the following: " .
               implode(", ", array_keys($this->signature_methods))
             );
         }
+
         return $this->signature_methods[$signature_method];
     }
 
     /**
      * try to find the consumer for the provided request's consumer key
+     *
+     * @param mixed $request
      */
     private function get_consumer($request)
     {
@@ -146,6 +161,10 @@ class OAuthServer
 
     /**
      * try to find the token for the provided request's token key
+     *
+     * @param mixed $request
+     * @param mixed $consumer
+     * @param mixed $token_type
      */
     private function get_token($request, $consumer, $token_type = "access")
     {
@@ -154,17 +173,24 @@ class OAuthServer
           : null;
 
         $token = $this->data_store->lookup_token(
-          $consumer, $token_type, $token_field
+            $consumer,
+            $token_type,
+            $token_field
         );
         if (!$token) {
             throw new OAuthException("Invalid $token_type token: $token_field");
         }
+
         return $token;
     }
 
     /**
      * all-in-one function to check the signature on a request
      * should guess the signature method appropriately
+     *
+     * @param mixed $request
+     * @param mixed $consumer
+     * @param mixed $token
      */
     private function check_signature($request, $consumer, $token)
     {
@@ -183,10 +209,10 @@ class OAuthServer
 
         $signature = $request->get_parameter('oauth_signature');
         $valid_sig = $signature_method->check_signature(
-          $request,
-          $consumer,
-          $token,
-          $signature
+            $request,
+            $consumer,
+            $token,
+            $signature
         );
 
         if (!$valid_sig) {
@@ -196,12 +222,14 @@ class OAuthServer
 
     /**
      * check that the timestamp is new enough
+     *
+     * @param mixed $timestamp
      */
     private function check_timestamp($timestamp)
     {
         if (!$timestamp) {
             throw new OAuthException(
-              'Missing timestamp parameter. The parameter is required'
+                'Missing timestamp parameter. The parameter is required'
             );
         }
 
@@ -209,32 +237,36 @@ class OAuthServer
         $now = time();
         if (abs($now - $timestamp) > $this->timestamp_threshold) {
             throw new OAuthException(
-              "Expired timestamp, yours $timestamp, ours $now"
+                "Expired timestamp, yours $timestamp, ours $now"
             );
         }
     }
 
     /**
      * check that the nonce is not repeated
+     *
+     * @param mixed $consumer
+     * @param mixed $token
+     * @param mixed $nonce
+     * @param mixed $timestamp
      */
     private function check_nonce($consumer, $token, $nonce, $timestamp)
     {
         if (!$nonce) {
             throw new OAuthException(
-              'Missing nonce parameter. The parameter is required'
+                'Missing nonce parameter. The parameter is required'
             );
         }
 
         // verify that the nonce is uniqueish
         $found = $this->data_store->lookup_nonce(
-          $consumer,
-          $token,
-          $nonce,
-          $timestamp
+            $consumer,
+            $token,
+            $nonce,
+            $timestamp
         );
         if ($found) {
             throw new OAuthException("Nonce already used: $nonce");
         }
     }
-
 }

@@ -8,7 +8,6 @@ namespace PayPal\Core;
  */
 class PPLoggingLevel
 {
-
     // FINE Logging Level
     const FINE = 3;
 

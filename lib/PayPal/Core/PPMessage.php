@@ -1,4 +1,5 @@
 <?php
+
 namespace PayPal\Core;
 
 /**
@@ -6,7 +7,6 @@ namespace PayPal\Core;
  */
 abstract class PPMessage
 {
-
     /**
      * @param string $prefix
      *
@@ -14,7 +14,7 @@ abstract class PPMessage
      */
     public function toNVPString($prefix = '')
     {
-        $nvp = array();
+        $nvp = [];
         foreach (get_object_vars($this) as $property => $defaultValue) {
 
             if (($propertyValue = $this->{$property}) === null || $propertyValue == null) {
@@ -27,21 +27,23 @@ abstract class PPMessage
             } elseif (is_array($defaultValue) || is_array($propertyValue)) {
                 foreach (array_values($propertyValue) as $i => $item) {
                     if (!is_object($item)) {
-                        $nvp[] = $prefix . $property . "($i)" . '=' . urlencode($item);
+                        $nvp[] = $prefix . $property . "($i)" . '=' . urlencode((string) $item);
                     } else {
                         $nvp[] = $item->toNVPString($prefix . $property . "($i).");
                     }
                 }
             } else {
                 // Handle classes with attributes
-                if ($property == 'value' && ($anno = PPUtils::propertyAnnotations($this,
-                    $property)) != null && isset($anno['value'])
+                if ($property == 'value' && ($anno = PPUtils::propertyAnnotations(
+                    $this,
+                    $property
+                )) != null && isset($anno['value'])
                 ) {
                     $nvpKey = substr($prefix, 0, -1); // Remove the ending '.'
                 } else {
                     $nvpKey = $prefix . $property;
                 }
-                $nvp[] = $nvpKey . '=' . urlencode($propertyValue);
+                $nvp[] = $nvpKey . '=' . urlencode((string) $propertyValue);
             }
         }
 
@@ -52,7 +54,7 @@ abstract class PPMessage
      * @param array  $map
      * @param string $prefix
      */
-    public function init(array $map = array(), $prefix = '')
+    public function init(array $map = [], $prefix = '')
     {
         if (empty($map)) {
             return;
@@ -65,7 +67,7 @@ abstract class PPMessage
               $this->isBuiltInType(($type = PPUtils::propertyType($this, $property)))
             ) {
                 $type              = PPUtils::propertyType($this, $property);
-                $this->{$property} = urldecode($map[$propKey]);
+                $this->{$property} = urldecode((string) $map[$propKey]);
                 continue; // string
 
             } elseif (!$filtered = PPUtils::filterKeyPrefix($map, $propKey)) {
@@ -81,26 +83,29 @@ abstract class PPMessage
             if (is_array($defaultValue) || PPUtils::isPropertyArray($this, $property)) { // array of objects
                 if ($this->isBuiltInType($type)) { // Array of simple types
                     foreach ($filtered as $key => $value) {
-                        $this->{$property}[trim($key, "()")] = urldecode($value);
+                        $this->{$property}[trim($key, "()")] = urldecode((string) $value);
                     }
                 } else { // Array of complex objects
                     $delim = '.';
+
                     for ($i = 0; $itemValues = PPUtils::filterKeyPrefix($filtered, "($i)"); $i++) {
                         $this->{$property}[$i] = $item = new $type();
                         $item->init(PPUtils::filterKeyPrefix($itemValues, "."));
                         if (array_key_exists("", $itemValues)) {
-                            $item->value = urldecode($itemValues[""]);
+                            $item->value = urldecode((string) $itemValues[""]);
                         }
                     }
                     // Handle cases where we have a list of objects
                     // with just the value present and all attributes values are null
                     foreach ($filtered as $key => $value) {
                         $idx = trim($key, "()");
-                        if (is_numeric($idx) && (is_null($this->{$property}) || !array_key_exists($idx,
-                              $this->{$property}))
+                        if (is_numeric($idx) && (is_null($this->{$property}) || !array_key_exists(
+                            $idx,
+                            $this->{$property}
+                        ))
                         ) {
-                            $this->{$property}[$idx]        = new $type;
-                            $this->{$property}[$idx]->value = urldecode($value);
+                            $this->{$property}[$idx]        = new $type();
+                            $this->{$property}[$idx]->value = urldecode((string) $value);
                         }
                     }
                 }
@@ -108,7 +113,7 @@ abstract class PPMessage
                 $this->{$property} = new $type();
                 $this->{$property}->init(PPUtils::filterKeyPrefix($filtered, '.')); // unprefix
                 if (array_key_exists("", $filtered)) {
-                    $this->{$property}->value = urldecode($filtered[""]);
+                    $this->{$property}->value = urldecode((string) $filtered[""]);
                 }
             }
         }
@@ -116,18 +121,8 @@ abstract class PPMessage
 
     private function isBuiltInType($typeName)
     {
-        static $types = array(
-          'string',
-          'int',
-          'integer',
-          'bool',
-          'boolean',
-          'float',
-          'decimal',
-          'long',
-          'datetime',
-          'double'
-        );
-        return in_array(strtolower($typeName), $types);
+        static $types = ['string', 'int', 'integer', 'bool', 'boolean', 'float', 'decimal', 'long', 'datetime', 'double'];
+
+        return in_array(strtolower((string) $typeName), $types);
     }
 }
