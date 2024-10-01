@@ -1,4 +1,5 @@
 <?php
+
 namespace PayPal\Transport;
 
 use PayPal\Core\PPHttpConfig;
@@ -7,19 +8,15 @@ use PayPal\Core\PPLoggingManager;
 
 class PPRestCall
 {
-
     /**
      *
      * @var PPLoggingManager logger interface
      */
     private $logger;
 
-    private $apiContext;
-
-    public function __construct($apiContext)
+    public function __construct(private $apiContext)
     {
-        $this->apiContext = $apiContext;
-        $this->logger     = new PPLoggingManager(__CLASS__, $apiContext->getConfig());
+        $this->logger     = new PPLoggingManager(self::class, $this->apiContext->getConfig());
     }
 
     /**
@@ -29,15 +26,14 @@ class PPRestCall
      * @param string $data     Request payload
      * @param array  $headers  HTTP headers
      */
-    public function execute($handlers, $path, $method, $data = '', $headers = array())
+    public function execute($handlers, $path, $method, $data = '', $headers = [])
     {
 
         $config     = $this->apiContext->getConfig();
         $httpConfig = new PPHttpConfig(null, $method);
-        $httpConfig->setHeaders($headers +
-          array(
-            'Content-Type' => 'application/json'
-          )
+        $httpConfig->setHeaders(
+            $headers +
+          ['Content-Type' => 'application/json']
         );
 
         foreach ($handlers as $handler) {
@@ -45,7 +41,7 @@ class PPRestCall
                 $shandler = "\\" . $handler;
                 $handler  = new $shandler($this->apiContext);
             }
-            $handler->handle($httpConfig, $data, array('path' => $path, 'apiContext' => $this->apiContext));
+            $handler->handle($httpConfig, $data, ['path' => $path, 'apiContext' => $this->apiContext]);
         }
         $connection = new PPHttpConnection($httpConfig, $config);
         $response   = $connection->execute($data);
@@ -53,5 +49,4 @@ class PPRestCall
 
         return $response;
     }
-
 }

@@ -14,3 +14,8 @@ atlassian-ide-plugin.xml
 # Composer
 vendor
 composer.lock
+
+# Tests and linting
+.php-cs-fixer.cache
+test-results
+.phpunit.result.cache

@@ -1,4 +1,5 @@
 <?php
+
 namespace PayPal\Auth\Openid;
 
 use PayPal\Common\PPApiContext;
@@ -9,10 +10,8 @@ use PayPal\Transport\PPRestCall;
 /**
  * Token grant resource
  */
-class PPOpenIdTokeninfo
-  extends PPModel
+class PPOpenIdTokeninfo extends PPModel
 {
-
     /**
      * OPTIONAL, if identical to the scope requested by the client; otherwise, REQUIRED.
      *
@@ -21,11 +20,13 @@ class PPOpenIdTokeninfo
     public function setScope($scope)
     {
         $this->scope = $scope;
+
         return $this;
     }
 
     /**
      * OPTIONAL, if identical to the scope requested by the client; otherwise, REQUIRED.
+     *
      * @return string
      */
     public function getScope()
@@ -41,11 +42,13 @@ class PPOpenIdTokeninfo
     public function setAccessToken($access_token)
     {
         $this->access_token = $access_token;
+
         return $this;
     }
 
     /**
      * The access token issued by the authorization server.
+     *
      * @return string
      */
     public function getAccessToken()
@@ -61,11 +64,13 @@ class PPOpenIdTokeninfo
     public function setRefreshToken($refresh_token)
     {
         $this->refresh_token = $refresh_token;
+
         return $this;
     }
 
     /**
      * The refresh token, which can be used to obtain new access tokens using the same authorization grant as described in OAuth2.0 RFC6749 in Section 6.
+     *
      * @return string
      */
     public function getRefreshToken()
@@ -81,11 +86,13 @@ class PPOpenIdTokeninfo
     public function setTokenType($token_type)
     {
         $this->token_type = $token_type;
+
         return $this;
     }
 
     /**
      * The type of the token issued as described in OAuth2.0 RFC6749 (Section 7.1).  Value is case insensitive.
+     *
      * @return string
      */
     public function getTokenType()
@@ -101,11 +108,13 @@ class PPOpenIdTokeninfo
     public function setIdToken($id_token)
     {
         $this->id_token = $id_token;
+
         return $this;
     }
 
     /**
      * The id_token is a session token assertion that denotes the user's authentication status
+     *
      * @return string
      */
     public function getIdToken()
@@ -121,11 +130,13 @@ class PPOpenIdTokeninfo
     public function setExpiresIn($expires_in)
     {
         $this->expires_in = $expires_in;
+
         return $this;
     }
 
     /**
      * The lifetime in seconds of the access token.
+     *
      * @return integer
      */
     public function getExpiresIn()
@@ -137,22 +148,25 @@ class PPOpenIdTokeninfo
      * Creates an Access Token from an Authorization Code.
      *
      * @path /v1/identity/openidconnect/tokenservice
+     *
      * @method POST
      *
-     * @param array        $params     (allowed values are client_id, client_secret, grant_type, code and redirect_uri)
-     *                                 (required) client_id from developer portal
-     *                                 (required) client_secret from developer portal
-     *                                 (required) code is Authorization code previously received from the authorization server
-     *                                 (required) redirect_uri Redirection endpoint that must match the one provided during the
-     *                                 authorization request that ended in receiving the authorization code.
-     *                                 (optional) grant_type is the Token grant type. Defaults to authorization_code
-     * @param PPApiContext $apiContext Optional API Context
+     * @param array        $params       (allowed values are client_id, client_secret, grant_type, code and redirect_uri)
+     *                                   (required) client_id from developer portal
+     *                                   (required) client_secret from developer portal
+     *                                   (required) code is Authorization code previously received from the authorization server
+     *                                   (required) redirect_uri Redirection endpoint that must match the one provided during the
+     *                                   authorization request that ended in receiving the authorization code.
+     *                                   (optional) grant_type is the Token grant type. Defaults to authorization_code
+     * @param PPApiContext $apiContext   Optional API Context
+     * @param mixed        $clientId
+     * @param mixed        $clientSecret
      *
      * @return PPOpenIdTokeninfo
      */
     public static function createFromAuthorizationCode($params, $clientId, $clientSecret, $apiContext = null)
     {
-        static $allowedParams = array('grant_type' => 1, 'code' => 1, 'redirect_uri' => 1);
+        static $allowedParams = ['grant_type' => 1, 'code' => 1, 'redirect_uri' => 1];
         if (is_null($apiContext)) {
             $apiContext = new PPApiContext();
         }
@@ -173,14 +187,15 @@ class PPOpenIdTokeninfo
         $call  = new PPRestCall($apiContext);
         $token = new PPOpenIdTokeninfo();
         $token->fromJson(
-          $call->execute(array(new PPOpenIdHandler()),
-            "/v1/identity/openidconnect/tokenservice", "POST",
-            http_build_query(array_intersect_key($params, $allowedParams)),
-            array(
-              'Content-Type'  => 'application/x-www-form-urlencoded',
-              'Authorization' => 'Basic ' . base64_encode($clientId . ":" . $clientSecret)
+            $call->execute(
+                [new PPOpenIdHandler()],
+                "/v1/identity/openidconnect/tokenservice",
+                "POST",
+                http_build_query(array_intersect_key($params, $allowedParams)),
+                ['Content-Type'  => 'application/x-www-form-urlencoded', 'Authorization' => 'Basic ' . base64_encode($clientId . ":" . $clientSecret)]
             )
-          ));
+        );
+
         return $token;
     }
 
@@ -188,6 +203,7 @@ class PPOpenIdTokeninfo
      * Creates an Access Token from an Refresh Token.
      *
      * @path /v1/identity/openidconnect/tokenservice
+     *
      * @method POST
      *
      * @param array      $params     (allowed values are grant_type and scope)
@@ -203,7 +219,7 @@ class PPOpenIdTokeninfo
     public function createFromRefreshToken($params, $apiContext = null)
     {
 
-        static $allowedParams = array('grant_type' => 1, 'refresh_token' => 1, 'scope' => 1);
+        static $allowedParams = ['grant_type' => 1, 'refresh_token' => 1, 'scope' => 1];
         if (is_null($apiContext)) {
             $apiContext = new PPApiContext();
         }
@@ -217,14 +233,15 @@ class PPOpenIdTokeninfo
 
         $call = new PPRestCall($apiContext);
         $this->fromJson(
-          $call->execute(array(new PPOpenIdHandler()),
-            "/v1/identity/openidconnect/tokenservice", "POST",
-            http_build_query(array_intersect_key($params, $allowedParams)),
-            array(
-              'Content-Type'  => 'application/x-www-form-urlencoded',
-              'Authorization' => 'Basic ' . base64_encode($params['client_id'] . ":" . $params['client_secret'])
+            $call->execute(
+                [new PPOpenIdHandler()],
+                "/v1/identity/openidconnect/tokenservice",
+                "POST",
+                http_build_query(array_intersect_key($params, $allowedParams)),
+                ['Content-Type'  => 'application/x-www-form-urlencoded', 'Authorization' => 'Basic ' . base64_encode($params['client_id'] . ":" . $params['client_secret'])]
             )
-          ));
+        );
+
         return $this;
     }
 }

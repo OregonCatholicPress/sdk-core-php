@@ -1,6 +1,8 @@
 <?php
+
 use PayPal\Exception\PPConfigurationException;
 use PHPUnit\Framework\TestCase;
+
 /**
  * Test class for PPConfigurationException.
  *
@@ -16,7 +18,8 @@ class PPConfigurationExceptionTest extends TestCase
      * Sets up the fixture, for example, opens a network connection.
      * This method is called before a test is executed.
      */
-    protected function setUp()
+    #[Override]
+    protected function setUp(): void
     {
         $this->object = new PPConfigurationException('Test PPConfigurationException');
     }
@@ -25,12 +28,13 @@ class PPConfigurationExceptionTest extends TestCase
      * Tears down the fixture, for example, closes a network connection.
      * This method is called after a test is executed.
      */
-    protected function tearDown()
+    #[Override]
+    protected function tearDown(): void
     {
     }
+
     public function testPPConfigurationException()
     {
-    	$this->assertEquals('Test PPConfigurationException', $this->object->getMessage());
+        $this->assertEquals('Test PPConfigurationException', $this->object->getMessage());
     }
 }
-?>

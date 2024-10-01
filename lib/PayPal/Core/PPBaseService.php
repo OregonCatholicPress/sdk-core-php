@@ -1,16 +1,11 @@
 <?php
+
 namespace PayPal\Core;
 
 use PayPal\Common\PPApiContext;
 
 class PPBaseService
 {
-
-    private $serviceName;
-    private $serviceBinding;
-    private $handlers;
-
-    protected $config;
     protected $lastRequest;
     protected $lastResponse;
 
@@ -29,12 +24,8 @@ class PPBaseService
         return $this->serviceName;
     }
 
-    public function __construct($serviceName, $serviceBinding, $config = null, $handlers = array())
+    public function __construct(private $serviceName, private $serviceBinding, protected $config = null, private $handlers = [])
     {
-        $this->serviceName    = $serviceName;
-        $this->serviceBinding = $serviceBinding;
-        $this->config         = $config;
-        $this->handlers       = $handlers;
     }
 
     /**
@@ -45,12 +36,13 @@ class PPBaseService
      * @param array      $handlers      Array of Handlers
      * @param mixed      $apiUserName   - Optional API credential - can either be
      *                                  a username configured in sdk_config.ini or a ICredential object created dynamically
+     * @param mixed      $port
      */
-    public function call($port, $method, $requestObject, $apiContext, $handlers = array())
+    public function call($port, $method, $requestObject, $apiContext, $handlers = [])
     {
 
         if (!is_array($handlers)) {
-            $handlers = array();
+            $handlers = [];
         }
 
         if (is_array($this->handlers)) {
@@ -64,11 +56,17 @@ class PPBaseService
             $apiContext->setConfig(PPConfigManager::getConfigWithDefaults($this->config));
         }
 
-        $service            = new PPAPIService($port, $this->serviceName,
-          $this->serviceBinding, $apiContext, $handlers);
+        $service            = new PPAPIService(
+            $port,
+            $this->serviceName,
+            $this->serviceBinding,
+            $apiContext,
+            $handlers
+        );
         $ret                = $service->makeRequest($method, new PPRequest($requestObject, $this->serviceBinding));
         $this->lastRequest  = $ret['request'];
         $this->lastResponse = $ret['response'];
+
         return $this->lastResponse;
     }
 }

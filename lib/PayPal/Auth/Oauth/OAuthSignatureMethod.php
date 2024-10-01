@@ -1,4 +1,5 @@
 <?php
+
 namespace PayPal\Auth\Oauth;
 
 /**
@@ -9,6 +10,7 @@ abstract class OAuthSignatureMethod
 {
     /**
      * Needs to return the name of the Signature Method (ie HMAC-SHA1)
+     *
      * @return string
      */
     abstract public function get_name();
@@ -40,6 +42,7 @@ abstract class OAuthSignatureMethod
     public function check_signature($request, $consumer, $token, $signature)
     {
         $built = $this->build_signature($request, $consumer, $token);
+
         return $built == $signature;
     }
 }

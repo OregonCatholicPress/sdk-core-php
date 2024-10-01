@@ -1,14 +1,15 @@
 <?php
+
 namespace PayPal\Handler;
 
+use Override;
 use PayPal\Auth\PPCertificateCredential;
 use PayPal\Auth\PPSubjectAuthorization;
 use PayPal\Auth\PPTokenAuthorization;
 
-class PPCertificateAuthHandler
-  implements IPPHandler
+class PPCertificateAuthHandler implements IPPHandler
 {
-
+    #[Override]
     public function handle($httpConfig, $request, $options)
     {
         /** @var PPCertificateCredential $credential */
@@ -31,6 +32,7 @@ class PPCertificateAuthHandler
                     }
                 }
                 break;
+
             case 'SOAP':
                 if ($thirdPartyAuth && $thirdPartyAuth instanceof PPTokenAuthorization) {
                     $request->addBindingInfo('securityHeader', '<ns:RequesterCredentials/>');
@@ -47,5 +49,4 @@ class PPCertificateAuthHandler
                 break;
         }
     }
-
 }

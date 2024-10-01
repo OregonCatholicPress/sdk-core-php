@@ -1,4 +1,5 @@
 <?php
+
 namespace PayPal\Auth;
 
 /**
@@ -7,28 +8,24 @@ namespace PayPal\Auth;
  * Token based authorization credentials are obtained using
  * the Permissions API
  */
-class PPTokenAuthorization
-  implements IPPThirdPartyAuthorization
+class PPTokenAuthorization implements IPPThirdPartyAuthorization
 {
-
     /**
-     * Permanent access token that identifies the relationship
-     * between the authorizing user and the API caller.
-     * @var string
+     * @param string $accessToken
+     * @param string $tokenSecret
      */
-    private $accessToken;
-
-    /**
-     * The token secret/password that will need to be used when
-     * generating the signature.
-     * @var string
-     */
-    private $tokenSecret;
-
-    public function __construct($accessToken, $tokenSecret)
-    {
-        $this->accessToken = $accessToken;
-        $this->tokenSecret = $tokenSecret;
+    public function __construct(
+        /**
+         * Permanent access token that identifies the relationship
+         * between the authorizing user and the API caller.
+         */
+        private $accessToken,
+        /**
+         * The token secret/password that will need to be used when
+         * generating the signature.
+         */
+        private $tokenSecret
+    ) {
     }
 
     public function getAccessToken()

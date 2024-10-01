@@ -1,4 +1,5 @@
 <?php
+
 namespace PayPal\Core;
 
 /**
@@ -8,12 +9,8 @@ namespace PayPal\Core;
  */
 class PPLoggingManager
 {
-
     // Default Logging Level
     const DEFAULT_LOGGING_LEVEL = 0;
-
-    // Logger name
-    private $loggerName;
 
     // Log enabled
     private $isLoggingEnabled;
@@ -23,19 +20,19 @@ class PPLoggingManager
 
     // Configured logging file
     private $loggerFile;
-    
+
     //log message
     private $loggerMessage;
-    public function __construct($loggerName, $config = null)
+
+    public function __construct(private $loggerName, $config = null)
     {
-        $this->loggerName = $loggerName;
         $config           = PPConfigManager::getConfigWithDefaults($config);
 
         $this->isLoggingEnabled = (array_key_exists('log.LogEnabled', $config) && $config['log.LogEnabled'] == '1');
 
         if ($this->isLoggingEnabled) {
-            $this->loggerFile   = ($config['log.FileName']) ? $config['log.FileName'] : ini_get('error_log');
-            $loggingLevel       = strtoupper($config['log.LogLevel']);
+            $this->loggerFile   = $config['log.FileName'] ?: ini_get('error_log');
+            $loggingLevel       = strtoupper((string) $config['log.LogLevel']);
             $this->loggingLevel = (isset($loggingLevel) && defined(__NAMESPACE__ . "\\PPLoggingLevel::$loggingLevel")) ? constant(__NAMESPACE__ . "\\PPLoggingLevel::$loggingLevel") : PPLoggingManager::DEFAULT_LOGGING_LEVEL;
         }
     }
@@ -44,10 +41,10 @@ class PPLoggingManager
     {
         $this->flush();
     }
- 
+
     public function flush()
     {
-        if($this->loggerMessage) {
+        if ($this->loggerMessage) {
             error_log($this->loggerMessage, 3, $this->loggerFile);
         }
     }
@@ -78,5 +75,4 @@ class PPLoggingManager
     {
         $this->log($message, PPLoggingLevel::FINE);
     }
-
 }

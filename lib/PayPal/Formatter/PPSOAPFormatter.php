@@ -1,13 +1,16 @@
 <?php
+
 namespace PayPal\Formatter;
 
-class PPSOAPFormatter
-  implements IPPFormatter
-{
+use BadMethodCallException;
+use Override;
 
+class PPSOAPFormatter implements IPPFormatter
+{
     private static $SOAP_NAMESPACE = 'xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"';
 
-    public function toString($request, $options = array())
+    #[Override]
+    public function toString($request, $options = [])
     {
 
         $customNamespace = ($request->getBindingInfo('namespace') != null) ? $request->getBindingInfo('namespace') : "";
@@ -26,8 +29,9 @@ class PPSOAPFormatter
         return $soapEnvelope . $soapHeader . $soapBody . '</soapenv:Envelope>';
     }
 
-    public function toObject($string, $options = array())
+    #[Override]
+    public function toObject($string, $options = []): never
     {
-        throw new \BadMethodCallException("Unimplemented");
+        throw new BadMethodCallException("Unimplemented");
     }
 }

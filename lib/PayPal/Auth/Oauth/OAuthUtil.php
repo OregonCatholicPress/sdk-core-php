@@ -1,4 +1,5 @@
 <?php
+
 namespace PayPal\Auth\Oauth;
 
 class OAuthUtil
@@ -6,32 +7,35 @@ class OAuthUtil
     public static function urlencode_rfc3986($input)
     {
         if (is_array($input)) {
-            return array_map(array('PayPal\Auth\Oauth\OAuthUtil', 'urlencode_rfc3986'), $input);
-        } else if (is_scalar($input)) {
+            return array_map([OAuthUtil::class, 'urlencode_rfc3986'], $input);
+        } elseif (is_scalar($input)) {
             $tmp1 = str_replace('%7E', '~', rawurlencode($input));
             $tmp2 = str_replace(".", "%2E", $tmp1);
             $tmp3 = str_replace("*", "%2A", $tmp2);
             $tmp4 = str_replace('+', ' ', $tmp3);
             $tmp  = str_replace("-", "%2D", $tmp4);
+
             return $tmp;
             /*$tmp1=str_replace('%7E', '~', rawurlencode($input));
              $tmp2= str_replace(".","%2E",$tmp1);
-               
-               
+
+
              return $tmp;*/
-        } else {
-            return '';
         }
+
+        return '';
+
     }
 
     public static function parseQueryString($str)
     {
-        $op    = array();
-        $pairs = explode("&", $str);
+        $op    = [];
+        $pairs = explode("&", (string) $str);
         foreach ($pairs as $pair) {
-            list($k, $v) = array_map("urldecode", explode("=", $pair));
+            [$k, $v] = array_map("urldecode", explode("=", $pair));
             $op[$k] = $v;
         }
+
         return $op;
     }
     //parses string to associative array -modified for PayPal Signature
@@ -41,7 +45,7 @@ class OAuthUtil
     // seem to be used anywhere so leaving it as is.
     public static function urldecode_rfc3986($string)
     {
-        return urldecode($string);
+        return urldecode((string) $string);
     }
 
     // Utility function for turning the Authorization: header into
@@ -51,9 +55,12 @@ class OAuthUtil
     //                  see http://code.google.com/p/oauth/issues/detail?id=163
     public static function split_header($header, $only_allow_oauth_parameters = true)
     {
-        $params = array();
-        if (preg_match_all('/(' . ($only_allow_oauth_parameters ? 'oauth_' : '') . '[a-z_-]*)=(:?"([^"]*)"|([^,]*))/',
-          $header, $matches)) {
+        $params = [];
+        if (preg_match_all(
+            '/(' . ($only_allow_oauth_parameters ? 'oauth_' : '') . '[a-z_-]*)=(:?"([^"]*)"|([^,]*))/',
+            (string) $header,
+            $matches
+        )) {
             foreach ($matches[1] as $i => $h) {
                 $params[$h] = OAuthUtil::urldecode_rfc3986(empty($matches[3][$i]) ? $matches[4][$i] : $matches[3][$i]);
             }
@@ -61,6 +68,7 @@ class OAuthUtil
                 unset($params['realm']);
             }
         }
+
         return $params;
     }
 
@@ -76,19 +84,19 @@ class OAuthUtil
             // we always want the keys to be Cased-Like-This and arh()
             // returns the headers in the same case as they are in the
             // request
-            $out = array();
-            foreach ($headers AS $key => $value) {
+            $out = [];
+            foreach ($headers as $key => $value) {
                 $key       = str_replace(
-                  " ",
-                  "-",
-                  ucwords(strtolower(str_replace("-", " ", $key)))
+                    " ",
+                    "-",
+                    ucwords(strtolower(str_replace("-", " ", $key)))
                 );
                 $out[$key] = $value;
             }
         } else {
             // otherwise we don't have apache and are just going to have to hope
             // that $_SERVER actually contains what we need
-            $out = array();
+            $out = [];
             if (isset($_SERVER['CONTENT_TYPE'])) {
                 $out['Content-Type'] = $_SERVER['CONTENT_TYPE'];
             }
@@ -97,19 +105,20 @@ class OAuthUtil
             }
 
             foreach ($_SERVER as $key => $value) {
-                if (substr($key, 0, 5) == "HTTP_") {
+                if (str_starts_with($key, "HTTP_")) {
                     // this is chaos, basically it is just there to capitalize the first
                     // letter of every word that is not an initial HTTP and strip HTTP
                     // code from przemek
                     $key       = str_replace(
-                      " ",
-                      "-",
-                      ucwords(strtolower(str_replace("_", " ", substr($key, 5))))
+                        " ",
+                        "-",
+                        ucwords(strtolower(str_replace("_", " ", substr($key, 5))))
                     );
                     $out[$key] = $value;
                 }
             }
         }
+
         return $out;
     }
 
@@ -119,12 +128,12 @@ class OAuthUtil
     public static function parse_parameters($input)
     {
         if (!isset($input) || !$input) {
-            return array();
+            return [];
         }
 
-        $pairs = explode('&', $input);
+        $pairs = explode('&', (string) $input);
 
-        $parsed_parameters = array();
+        $parsed_parameters = [];
         foreach ($pairs as $pair) {
             $split     = explode('=', $pair, 2);
             $parameter = OAuthUtil::urldecode_rfc3986($split[0]);
@@ -137,7 +146,7 @@ class OAuthUtil
                 if (is_scalar($parsed_parameters[$parameter])) {
                     // This is the first duplicate, so transform scalar (string) into an array
                     // so we can add the duplicates
-                    $parsed_parameters[$parameter] = array($parsed_parameters[$parameter]);
+                    $parsed_parameters[$parameter] = [$parsed_parameters[$parameter]];
                 }
 
                 $parsed_parameters[$parameter][] = $value;
@@ -145,6 +154,7 @@ class OAuthUtil
                 $parsed_parameters[$parameter] = $value;
             }
         }
+
         return $parsed_parameters;
     }
 
@@ -163,7 +173,7 @@ class OAuthUtil
         // Ref: Spec: 9.1.1 (1)
         uksort($params, 'strcmp');
 
-        $pairs = array();
+        $pairs = [];
         foreach ($params as $parameter => $value) {
             if (is_array($value)) {
                 // If two or more parameters share the same name, they are sorted by their value
@@ -177,6 +187,7 @@ class OAuthUtil
                 $pairs[] = $parameter . '=' . $value;
             }
         }
+
         // For each parameter, the name is separated from the corresponding value by an '=' character (ASCII code 61)
         // Each name-value pair is separated by an '&' character (ASCII code 38)
         return implode('&', $pairs);

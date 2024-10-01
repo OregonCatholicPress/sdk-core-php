@@ -1,87 +1,98 @@
 <?php
-use PayPal\Common\PPApiContext;
+
 use PayPal\Auth\Openid\PPOpenIdSession;
+use PayPal\Common\PPApiContext;
 use PHPUnit\Framework\TestCase;
+
 /**
  * Test class for PPOpenIdSession.
  *
  */
-class PPOpenIdSessionTest extends TestCase {
+class PPOpenIdSessionTest extends TestCase
+{
+    private $context;
 
-	private $context;
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 */
-	protected function setUp()
-	{
-		$this->context = new PPApiContext(
-			array(
-				'acct1.ClientId' => 'DummyId',
-				'acct1.ClientSecret' => 'A8VERY8SECRET8VALUE0',
-				'mode' => 'live'
-			)
-		);
-	}
+    /**
+     * Sets up the fixture, for example, opens a network connection.
+     * This method is called before a test is executed.
+     */
+    #[Override]
+    protected function setUp(): void
+    {
+        $this->context = new PPApiContext(
+            ['acct1.ClientId' => 'DummyId', 'acct1.ClientSecret' => 'A8VERY8SECRET8VALUE0', 'mode' => 'live']
+        );
+    }
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 */
-	protected function tearDown()
-	{
-	}
+    /**
+     * Tears down the fixture, for example, closes a network connection.
+     * This method is called after a test is executed.
+     */
+    #[Override]
+    protected function tearDown(): void
+    {
+    }
 
+    #[PHPUnit\Framework\Attributes\Test]
+    public function testLoginUrlForMultipleScopes()
+    {
 
-	/**
-	 * @test
-	 */
-	public function testLoginUrlForMultipleScopes() {
+        $clientId = "AQkquBDf1zctJOWGKWUEtKXm6qVhueUEMvXO_-MCI4DQQ4-LWvkDLIN2fGsd";
+        $redirectUri = 'https://devtools-paypal.com/';
+        $scope = ['this', 'that', 'and more'];
 
-		$clientId = "AQkquBDf1zctJOWGKWUEtKXm6qVhueUEMvXO_-MCI4DQQ4-LWvkDLIN2fGsd";
-		$redirectUri = 'https://devtools-paypal.com/';
-		$scope = array('this', 'that', 'and more');
+        $expectedBaseUrl = "https://www.sandbox.paypal.com/signin/authorize";
 
-		$expectedBaseUrl = "https://www.sandbox.paypal.com/signin/authorize";
+        $this->assertEquals(
+            $expectedBaseUrl . "?client_id=$clientId&response_type=code&scope=this+that+and+more+openid&redirect_uri=" . urlencode($redirectUri),
+            PPOpenIdSession::getAuthorizationUrl($redirectUri, $scope, $clientId),
+            "Failed case - custom scope"
+        );
 
-		$this->assertEquals($expectedBaseUrl . "?client_id=$clientId&response_type=code&scope=this+that+and+more+openid&redirect_uri=" . urlencode($redirectUri),
-				PPOpenIdSession::getAuthorizationUrl($redirectUri, $scope, $clientId), "Failed case - custom scope");
+        $scope = [];
+        $this->assertEquals(
+            $expectedBaseUrl . "?client_id=$clientId&response_type=code&scope=openid+profile+address+email+phone+" . urlencode("https://uri.paypal.com/services/paypalattributes") . "+" . urlencode('https://uri.paypal.com/services/expresscheckout') . "&redirect_uri=" . urlencode($redirectUri),
+            PPOpenIdSession::getAuthorizationUrl($redirectUri, $scope, $clientId),
+            "Failed case - default scope"
+        );
 
-		$scope = array();
-		$this->assertEquals($expectedBaseUrl . "?client_id=$clientId&response_type=code&scope=openid+profile+address+email+phone+" . urlencode("https://uri.paypal.com/services/paypalattributes") ."+". urlencode('https://uri.paypal.com/services/expresscheckout') . "&redirect_uri=" . urlencode($redirectUri),
-				PPOpenIdSession::getAuthorizationUrl($redirectUri, $scope, $clientId), "Failed case - default scope");
+        $scope = ['openid'];
+        $this->assertEquals(
+            $expectedBaseUrl . "?client_id=$clientId&response_type=code&scope=openid&redirect_uri=" . urlencode($redirectUri),
+            PPOpenIdSession::getAuthorizationUrl($redirectUri, $scope, $clientId),
+            "Failed case - openid scope"
+        );
+    }
 
+    #[PHPUnit\Framework\Attributes\Test]
+    public function testLoginWithCustomConfig()
+    {
 
-		$scope = array('openid');
-		$this->assertEquals($expectedBaseUrl . "?client_id=$clientId&response_type=code&scope=openid&redirect_uri=" . urlencode($redirectUri),
-				PPOpenIdSession::getAuthorizationUrl($redirectUri, $scope, $clientId), "Failed case - openid scope");
-	}
+        $redirectUri = 'http://mywebsite.com';
+        $scope = ['this', 'that', 'and more'];
 
-	/**
-	 * @test
-	 */
-	public function testLoginWithCustomConfig() {
+        $expectedBaseUrl = "https://www.paypal.com/signin/authorize";
 
-		$redirectUri = 'http://mywebsite.com';
-		$scope = array('this', 'that', 'and more');
+        $this->assertEquals(
+            $expectedBaseUrl . "?client_id=DummyId&response_type=code&scope=this+that+and+more+openid&redirect_uri=" . urlencode($redirectUri),
+            PPOpenIdSession::getAuthorizationUrl($redirectUri, $scope, "DummyId", null, null, $this->context),
+            "Failed case - custom config"
+        );
+    }
 
-		$expectedBaseUrl = "https://www.paypal.com/signin/authorize";
+    #[PHPUnit\Framework\Attributes\Test]
+    public function testLogoutWithCustomConfig()
+    {
 
-		$this->assertEquals($expectedBaseUrl . "?client_id=DummyId&response_type=code&scope=this+that+and+more+openid&redirect_uri=" . urlencode($redirectUri),
-				PPOpenIdSession::getAuthorizationUrl($redirectUri, $scope, "DummyId", null, null, $this->context), "Failed case - custom config");
-	}
+        $redirectUri = 'http://mywebsite.com';
+        $idToken = 'abc';
 
-	/**
-	 * @test
-	 */
-	public function testLogoutWithCustomConfig() {
+        $expectedBaseUrl = "https://www.paypal.com/webapps/auth/protocol/openidconnect/v1/endsession";
 
-		$redirectUri = 'http://mywebsite.com';
-		$idToken = 'abc';
-
-		$expectedBaseUrl = "https://www.paypal.com/webapps/auth/protocol/openidconnect/v1/endsession";
-
-		$this->assertEquals($expectedBaseUrl . "?id_token=$idToken&redirect_uri=" . urlencode($redirectUri) . "&logout=true",
-				PPOpenIdSession::getLogoutUrl($redirectUri, $idToken, $this->context), "Failed case - custom config");
-	}
+        $this->assertEquals(
+            $expectedBaseUrl . "?id_token=$idToken&redirect_uri=" . urlencode($redirectUri) . "&logout=true",
+            PPOpenIdSession::getLogoutUrl($redirectUri, $idToken, $this->context),
+            "Failed case - custom config"
+        );
+    }
 }

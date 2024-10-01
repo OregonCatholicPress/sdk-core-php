@@ -1,4 +1,5 @@
 <?php
+
 use PayPal\Auth\PPSignatureCredential;
 use PayPal\Core\PPConstants;
 use PayPal\Core\PPHttpConfig;
@@ -6,146 +7,137 @@ use PayPal\Core\PPRequest;
 use PayPal\Handler\PPPlatformServiceHandler;
 use PHPUnit\Framework\TestCase;
 
-class PPPlatformServiceHandlerTest extends TestCase {
+class PPPlatformServiceHandlerTest extends TestCase
+{
+    private $options;
 
-	private $options;
+    #[Override]
+    protected function setUp(): void
+    {
+        $this->options = ['config' => ['mode' => 'sandbox', 'acct1.UserName' => 'user', 'acct1.Password' => 'pass', 'acct1.Signature' => 'sign', 'acct1.AppId' => 'APP', 'acct2.UserName' => 'certuser', 'acct2.Password' => 'pass', 'acct2.CertPath' => 'pathtocert'], 'serviceName' => 'AdaptivePayments', 'apiMethod' => 'ConvertCurrency'];
+    }
 
-	protected function setup() {
-		$this->options = array(
-			'config' => array(
-				'mode' => 'sandbox',
-				'acct1.UserName' => 'user',
-				'acct1.Password' => 'pass',
-				'acct1.Signature' => 'sign',
-				'acct1.AppId' => 'APP',
-				'acct2.UserName' => 'certuser',
-				'acct2.Password' => 'pass',
-				'acct2.CertPath' => 'pathtocert',
-			),
-			'serviceName' => 'AdaptivePayments',
-			'apiMethod' => 'ConvertCurrency');
-	}
+    #[Override]
+    protected function tearDown(): void
+    {
 
-	protected function tearDown() {
+    }
 
-	}
+    #[PHPUnit\Framework\Attributes\Test]
+    public function testDefaultAPIAccount()
+    {
 
-	/**
-	 * @test
-	 */
-	public function testDefaultAPIAccount() {
+        $req = new PPRequest(new stdClass(), 'NV');
 
-		$req = new PPRequest(new StdClass(), 'NV');
+        $httpConfig = new PPHttpConfig();
+        $handler = new PPPlatformServiceHandler(null, 'sdkname', 'sdkversion');
+        $handler->handle($httpConfig, $req, $this->options);
+        $this->assertEquals($this->options['config']['acct1.Signature'], $req->getCredential()->getSignature());
 
-		$httpConfig = new PPHttpConfig();
-		$handler = new PPPlatformServiceHandler(null, 'sdkname', 'sdkversion');
-		$handler->handle($httpConfig, $req, $this->options);
-		$this->assertEquals($this->options['config']['acct1.Signature'], $req->getCredential()->getSignature());
+        $cred = new PPSignatureCredential('user', 'pass', 'sig');
+        $cred->setApplicationId('appId');
 
+        $httpConfig = new PPHttpConfig();
+        $handler = new PPPlatformServiceHandler($cred, 'sdkname', 'sdkversion');
+        $handler->handle($httpConfig, $req, $this->options);
 
-		$cred = new PPSignatureCredential('user', 'pass', 'sig');
-		$cred->setApplicationId('appId');
+        $this->assertEquals($cred, $req->getCredential());
+    }
 
-		$httpConfig = new PPHttpConfig();
-		$handler = new PPPlatformServiceHandler($cred, 'sdkname', 'sdkversion');
-		$handler->handle($httpConfig, $req, $this->options);
+    #[PHPUnit\Framework\Attributes\Test]
+    public function testHeadersAdded()
+    {
 
-		$this->assertEquals($cred, $req->getCredential());
-	}
+        $req = new PPRequest(new stdClass(), 'NV');
 
-	/**
-	 * @test
-	 */
-	public function testHeadersAdded() {
+        $httpConfig = new PPHttpConfig();
+        $handler = new PPPlatformServiceHandler(null, 'sdkname', 'sdkversion');
+        $handler->handle($httpConfig, $req, $this->options);
 
-		$req = new PPRequest(new StdClass(), 'NV');
+        $this->assertEquals(9, count($httpConfig->getHeaders()), "Basic headers not added");
 
-		$httpConfig = new PPHttpConfig();
-		$handler = new PPPlatformServiceHandler(null, 'sdkname', 'sdkversion');
-		$handler->handle($httpConfig, $req, $this->options);
+        $httpConfig = new PPHttpConfig();
+        $handler = new PPPlatformServiceHandler('certuser', 'sdkname', 'sdkversion');
+        $handler->handle($httpConfig, $req, $this->options);
 
-		$this->assertEquals(9, count($httpConfig->getHeaders()), "Basic headers not added");
+        $this->assertEquals(7, count($httpConfig->getHeaders()));
+        $this->assertEquals('certuser', $req->getCredential()->getUsername());
+    }
 
-		$httpConfig = new PPHttpConfig();
-		$handler = new PPPlatformServiceHandler('certuser', 'sdkname', 'sdkversion');
-		$handler->handle($httpConfig, $req, $this->options);
+    #[PHPUnit\Framework\Attributes\Test]
+    public function testEndpoint()
+    {
+        $serviceName = 'AdaptivePayments';
+        $apiMethod = 'ConvertCurrency';
 
-		$this->assertEquals(7, count($httpConfig->getHeaders()));
-		$this->assertEquals('certuser', $req->getCredential()->getUsername());
-	}
+        $httpConfig = new PPHttpConfig();
+        $handler = new PPPlatformServiceHandler(null, 'sdkname', 'sdkversion');
 
-	/**
-	 * @test
-	 */
-	public function testEndpoint() {
-		$serviceName = 'AdaptivePayments';
-		$apiMethod = 'ConvertCurrency';
+        $handler->handle(
+            $httpConfig,
+            new PPRequest(new stdClass(), 'NV'),
+            $this->options
+        );
+        $this->assertEquals(PPConstants::PLATFORM_SANDBOX_ENDPOINT . "$serviceName/$apiMethod", $httpConfig->getUrl());
 
-		$httpConfig = new PPHttpConfig();
-		$handler = new PPPlatformServiceHandler(null, 'sdkname', 'sdkversion');
+        $options = $this->options;
+        $options['config']['mode'] = 'live';
+        $handler->handle(
+            $httpConfig,
+            new PPRequest(new stdClass(), 'NV'),
+            $options
+        );
+        $this->assertEquals(PPConstants::PLATFORM_LIVE_ENDPOINT . "$serviceName/$apiMethod", $httpConfig->getUrl());
 
-		$handler->handle($httpConfig,
-				new PPRequest(new StdClass(), 'NV'),
-				$this->options
-		);
-		$this->assertEquals(PPConstants::PLATFORM_SANDBOX_ENDPOINT . "$serviceName/$apiMethod", $httpConfig->getUrl());
+        $customEndpoint = 'http://myhost/';
+        $options = $this->options;
+        $options['config']['service.EndPoint'] = $customEndpoint;
+        $handler->handle(
+            $httpConfig,
+            new PPRequest(new stdClass(), 'NV'),
+            $options
+        );
+        $this->assertEquals("$customEndpoint$serviceName/$apiMethod", $httpConfig->getUrl(), "Custom endpoint not processed");
 
-		$options = $this->options;
-		$options['config']['mode'] = 'live';
-		$handler->handle($httpConfig,
-				new PPRequest(new StdClass(), 'NV'),
-				$options
-		);
-		$this->assertEquals(PPConstants::PLATFORM_LIVE_ENDPOINT . "$serviceName/$apiMethod", $httpConfig->getUrl());
+    }
 
+    #[PHPUnit\Framework\Attributes\Test]
+    public function testInvalidConfigurations()
+    {
+        $httpConfig = new PPHttpConfig();
+        $handler = new PPPlatformServiceHandler(null, 'sdkname', 'sdkversion');
 
-		$customEndpoint = 'http://myhost/';
-		$options = $this->options;
-		$options['config']['service.EndPoint'] = $customEndpoint;
-		$handler->handle($httpConfig,
-				new PPRequest(new StdClass(), 'NV'),
-				$options
-		);
-		$this->assertEquals("$customEndpoint$serviceName/$apiMethod", $httpConfig->getUrl(), "Custom endpoint not processed");
+        $this->expectException(PayPal\Exception\PPMissingCredentialException::class);
+        $handler->handle(
+            $httpConfig,
+            new PPRequest(new stdClass(), 'NV'),
+            ['config' => []]
+        );
 
-	}
+        $this->expectException(PayPal\Exception\PPConfigurationException::class);
+        $options = $this->options;
+        unset($options['mode']);
+        $handler->handle(
+            $httpConfig,
+            new PPRequest(new stdClass(), 'NV'),
+            $options
+        );
+    }
 
-	/**
-	 * @test
-	 */
-	 public function testInvalidConfigurations() {
-		$httpConfig = new PPHttpConfig();
-		$handler = new PPPlatformServiceHandler(null, 'sdkname', 'sdkversion');
+    #[PHPUnit\Framework\Attributes\Test]
+    public function testSourceHeader()
+    {
+        $httpConfig = new PPHttpConfig();
+        $handler = new PPPlatformServiceHandler(null, 'sdkname', 'sdkversion');
+        $handler->handle(
+            $httpConfig,
+            new PPRequest(new stdClass(), 'NV'),
+            $this->options
+        );
 
-		$this->setExpectedException('PayPal\Exception\PPMissingCredentialException');
-		$handler->handle($httpConfig,
-				new PPRequest(new StdClass(), 'NV'),
-				array('config' => array())
-		);
-
-		$this->setExpectedException('PayPal\Exception\PPConfigurationException');
-		$options = $this->options;
-		unset($options['mode']);
-		$handler->handle($httpConfig,
-				new PPRequest(new StdClass(), 'NV'),
-				$options
-		);
-	 }
-
-	/**
-	 * @test
-	 */
-	 public function testSourceHeader() {
-		$httpConfig = new PPHttpConfig();
-		$handler = new PPPlatformServiceHandler(null, 'sdkname', 'sdkversion');
-		$handler->handle($httpConfig,
-				new PPRequest(new StdClass(), 'NV'),
-				$this->options
-		);
-
-		$headers = $httpConfig->getHeaders();
-		$this->assertArrayHasKey('X-PAYPAL-REQUEST-SOURCE', $headers);
-		$this->assertRegExp('/.*sdkname.*/', $headers['X-PAYPAL-REQUEST-SOURCE']);
-		$this->assertRegExp('/.*sdkversion.*/', $headers['X-PAYPAL-REQUEST-SOURCE']);
-	 }
+        $headers = $httpConfig->getHeaders();
+        $this->assertArrayHasKey('X-PAYPAL-REQUEST-SOURCE', $headers);
+        $this->assertMatchesRegularExpression('/.*sdkname.*/', $headers['X-PAYPAL-REQUEST-SOURCE']);
+        $this->assertMatchesRegularExpression('/.*sdkversion.*/', $headers['X-PAYPAL-REQUEST-SOURCE']);
+    }
 }

@@ -1,4 +1,5 @@
 <?php
+
 namespace PayPal\Core;
 
 use PayPal\Exception\PPConfigurationException;
@@ -11,34 +12,31 @@ use PayPal\Exception\PPConnectionException;
  */
 class PPHttpConnection
 {
-
-    private $httpConfig;
-
     /**
      * HTTP status codes for which a retry must be attempted
      * retry is currently attempted for Request timeout, Bad Gateway,
      * Service Unavailable and Gateway timeout errors.
      */
-    private static $retryCodes = array('408', '502', '503', '504',);
+    private static $retryCodes = ['408', '502', '503', '504'];
 
     private $logger;
 
-    public function __construct($httpConfig, $config)
+    public function __construct(private $httpConfig, $config)
     {
         if (!function_exists("curl_init")) {
             throw new PPConfigurationException("Curl module is not available on this system");
         }
-        $this->httpConfig = $httpConfig;
-        $this->logger     = new PPLoggingManager(__CLASS__, $config);
+        $this->logger     = new PPLoggingManager(self::class, $config);
     }
 
     private function getHttpHeaders()
     {
 
-        $ret = array();
+        $ret = [];
         foreach ($this->httpConfig->getHeaders() as $k => $v) {
             $ret[] = "$k: $v";
         }
+
         return $ret;
     }
 
@@ -63,6 +61,8 @@ class PPHttpConnection
         switch ($this->httpConfig->getMethod()) {
             case 'POST':
                 curl_setopt($ch, CURLOPT_POST, true);
+
+                // no break
             case 'PUT':
             case 'PATCH':
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
@@ -78,8 +78,11 @@ class PPHttpConnection
         $result = curl_exec($ch);
         if (curl_errno($ch) == 60) {
             $this->logger->info("Invalid or no certificate authority found - Retrying using bundled CA certs file");
-            curl_setopt($ch, CURLOPT_CAINFO,
-              dirname(__FILE__) . '/cacert.pem');
+            curl_setopt(
+                $ch,
+                CURLOPT_CAINFO,
+                __DIR__ . '/cacert.pem'
+            );
             $result = curl_exec($ch);
         }
         $httpStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -101,17 +104,21 @@ class PPHttpConnection
         curl_close($ch);
 
         if (in_array($httpStatus, self::$retryCodes)) {
-            $ex = new PPConnectionException($this->httpConfig->getUrl(),
-              "Got Http response code $httpStatus when accessing {$this->httpConfig->getUrl()}. Retried $retries times.");
+            $ex = new PPConnectionException(
+                $this->httpConfig->getUrl(),
+                "Got Http response code $httpStatus when accessing {$this->httpConfig->getUrl()}. Retried $retries times."
+            );
             $ex->setData($result);
             throw $ex;
-        } else if ($httpStatus < 200 || $httpStatus >= 300) {
-            $ex = new PPConnectionException($this->httpConfig->getUrl(),
-              "Got Http response code $httpStatus when accessing {$this->httpConfig->getUrl()}.");
+        } elseif ($httpStatus < 200 || $httpStatus >= 300) {
+            $ex = new PPConnectionException(
+                $this->httpConfig->getUrl(),
+                "Got Http response code $httpStatus when accessing {$this->httpConfig->getUrl()}."
+            );
             $ex->setData($result);
             throw $ex;
         }
+
         return $result;
     }
-
 }

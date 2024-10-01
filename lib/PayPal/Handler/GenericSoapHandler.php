@@ -1,17 +1,16 @@
 <?php
+
 namespace PayPal\Handler;
 
-class GenericSoapHandler
-  implements IPPHandler
+use Override;
+
+class GenericSoapHandler implements IPPHandler
 {
-
-    private $namespace;
-
-    public function __construct($namespace)
+    public function __construct(private $namespace)
     {
-        $this->namespace = $namespace;
     }
 
+    #[Override]
     public function handle($httpConfig, $request, $options)
     {
 

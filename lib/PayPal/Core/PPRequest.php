@@ -1,4 +1,5 @@
 <?php
+
 namespace PayPal\Core;
 
 use PayPal\Auth\IPPCredential;
@@ -9,39 +10,37 @@ use PayPal\Auth\IPPCredential;
  */
 class PPRequest
 {
-
-    /**
-     * Request Object
-     *
-     * @var object
-     */
-    private $requestObject;
-
     /**
      * Optional credentials associated with
      * the request
+     *
      * @var IPPCredential
      */
     private $credential;
 
     /**
-     * Transport binding for this request.
-     * Can be NVP, SOAP etc
-     * @var string
-     */
-    private $bindingType;
-
-    /**
      *
      * Holder for any binding specific info
+     *
      * @var array
      */
-    private $bindingInfo = array();
+    private $bindingInfo = [];
 
-    public function __construct($requestObject, $bindingType)
-    {
-        $this->requestObject = $requestObject;
-        $this->bindingType   = $bindingType;
+    /**
+     * @param object $requestObject
+     * @param string $bindingType
+     */
+    public function __construct(
+        /**
+         * Request Object
+         */
+        private $requestObject,
+        /**
+         * Transport binding for this request.
+         * Can be NVP, SOAP etc
+         */
+        private $bindingType
+    ) {
     }
 
     public function getRequestObject()
@@ -59,15 +58,15 @@ class PPRequest
         if (isset($name)) {
             return array_key_exists($name, $this->bindingInfo) ? $this->bindingInfo[$name] : null;
         }
+
         return $this->bindingInfo;
     }
 
     /**
      *
      * @param string $name
-     * @param mixed  $value
      */
-    public function addBindingInfo($name, $value)
+    public function addBindingInfo($name, mixed $value)
     {
         $this->bindingInfo[$name] = $value;
     }

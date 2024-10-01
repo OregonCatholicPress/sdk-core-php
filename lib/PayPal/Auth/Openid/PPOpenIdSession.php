@@ -1,4 +1,5 @@
 <?php
+
 namespace PayPal\Auth\Openid;
 
 use PayPal\Common\PPApiContext;
@@ -6,7 +7,6 @@ use PayPal\Core\PPConstants;
 
 class PPOpenIdSession
 {
-
     /**
      * Returns the PayPal URL to which the user must be redirected to
      * start the authentication / authorization process.
@@ -18,14 +18,16 @@ class PPOpenIdSession
      * @param string       $clientId    client id from developer portal
      *                                  See https://developer.paypal.com/webapps/developer/docs/integration/direct/log-in-with-paypal/detailed/#attributes for more
      * @param PPApiContext $apiContext  Optional API Context
+     * @param null|mixed   $nonce
+     * @param null|mixed   $state
      */
     public static function getAuthorizationUrl(
-      $redirectUri,
-      $scope,
-      $clientId,
-      $nonce = null,
-      $state = null,
-      $apiContext = null
+        $redirectUri,
+        $scope,
+        $clientId,
+        $nonce = null,
+        $state = null,
+        $apiContext = null
     ) {
 
         if (is_null($apiContext)) {
@@ -38,25 +40,12 @@ class PPOpenIdSession
             $clientId = $apiContext->get($clientId);
         }
 
-        $scope = count($scope) != 0 ? $scope : array(
-          'openid',
-          'profile',
-          'address',
-          'email',
-          'phone',
-          'https://uri.paypal.com/services/paypalattributes',
-          'https://uri.paypal.com/services/expresscheckout'
-        );
+        $scope = count($scope) != 0 ? $scope : ['openid', 'profile', 'address', 'email', 'phone', 'https://uri.paypal.com/services/paypalattributes', 'https://uri.paypal.com/services/expresscheckout'];
         if (!in_array('openid', $scope)) {
             $scope[] = 'openid';
         }
 
-        $params = array(
-          'client_id'     => $clientId,
-          'response_type' => 'code',
-          'scope'         => implode(" ", $scope),
-          'redirect_uri'  => $redirectUri
-        );
+        $params = ['client_id'     => $clientId, 'response_type' => 'code', 'scope'         => implode(" ", $scope), 'redirect_uri'  => $redirectUri];
 
         if ($nonce) {
             $params['nonce'] = $nonce;
@@ -86,11 +75,8 @@ class PPOpenIdSession
         }
         $config = $apiContext->getConfig();
 
-        $params = array(
-          'id_token'     => $idToken,
-          'redirect_uri' => $redirectUri,
-          'logout'       => 'true'
-        );
+        $params = ['id_token'     => $idToken, 'redirect_uri' => $redirectUri, 'logout'       => 'true'];
+
         return sprintf("%s/webapps/auth/protocol/openidconnect/v1/endsession?%s", self::getBaseUrl($config), http_build_query($params));
     }
 
@@ -99,16 +85,19 @@ class PPOpenIdSession
 
         if (array_key_exists('openid.RedirectUri', $config)) {
             return $config['openid.RedirectUri'];
-        } else if (array_key_exists('mode', $config)) {
-            switch (strtoupper($config['mode'])) {
+        } elseif (array_key_exists('mode', $config)) {
+            switch (strtoupper((string) $config['mode'])) {
                 case 'SANDBOX':
                     return PPConstants::OPENID_REDIRECT_SANDBOX_URL;
+
                 case 'LIVE':
                     return PPConstants::OPENID_REDIRECT_LIVE_URL;
+
                 case 'TLS':
                     return PPConstants::OPENID_REDIRECT_TLS_URL;
             }
         }
+
         return;
     }
 }

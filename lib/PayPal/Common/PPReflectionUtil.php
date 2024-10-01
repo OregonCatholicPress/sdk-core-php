@@ -1,18 +1,21 @@
 <?php
+
 namespace PayPal\Common;
+
+use ReflectionMethod;
+use RuntimeException;
 
 class PPReflectionUtil
 {
-
     /**
-     * @var array|\ReflectionMethod[]
+     * @var array|ReflectionMethod[]
      */
-    private static $propertiesRefl = array();
+    private static $propertiesRefl = [];
 
     /**
      * @var array|string[]
      */
-    private static $propertiesType = array();
+    private static $propertiesType = [];
 
     /**
      *
@@ -31,24 +34,27 @@ class PPReflectionUtil
 
         if (isset($param)) {
             $anno = explode(' ', $param);
+
             return $anno[0];
-        } else {
-            return 'string';
         }
+
+        return 'string';
+
     }
 
     /**
      * @param string $class
      * @param string $propertyName
      *
-     * @throws \RuntimeException
+     * @throws RuntimeException
+     *
      * @return string
      */
     public static function propertyAnnotations($class, $propertyName)
     {
-        $class = is_object($class) ? get_class($class) : $class;
+        $class = is_object($class) ? $class::class : $class;
         if (!class_exists('ReflectionProperty')) {
-            throw new \RuntimeException("Property type of " . $class . "::{$propertyName} cannot be resolved");
+            throw new RuntimeException("Property type of " . $class . "::{$propertyName} cannot be resolved");
         }
 
         if ($annotations =& self::$propertiesType[$class][$propertyName]) {
@@ -56,16 +62,22 @@ class PPReflectionUtil
         }
 
         if (!($refl =& self::$propertiesRefl[$class][$propertyName])) {
-            $getter                                      = method_exists($class,
-              "get" . ucfirst($propertyName)) ? "get" . ucfirst($propertyName)
+            $getter                                      = method_exists(
+                $class,
+                "get" . ucfirst($propertyName)
+            ) ? "get" . ucfirst($propertyName)
               : "get" . preg_replace_callback("/([_\-\s]?([a-z0-9]+))/", "self::replace_callback", $propertyName);
-            $refl                                        = new \ReflectionMethod($class, $getter);
+            $refl                                        = new ReflectionMethod($class, $getter);
             self::$propertiesRefl[$class][$propertyName] = $refl;
         }
 
         // todo: smarter regexp
-        if (!preg_match_all('~\@([^\s@\(]+)[\t ]*(?:\(?([^\n@]+)\)?)?~i', $refl->getDocComment(), $annots,
-          PREG_PATTERN_ORDER)
+        if (!preg_match_all(
+            '~\@([^\s@\(]+)[\t ]*(?:\(?([^\n@]+)\)?)?~i',
+            (string) $refl->getDocComment(),
+            $annots,
+            PREG_PATTERN_ORDER
+        )
         ) {
             return null;
         }
@@ -78,9 +90,11 @@ class PPReflectionUtil
 
     /**
      * preg_replace_callback callback function
+     *
+     * @param mixed $match
      */
     private static function replace_callback($match)
     {
-        return ucwords($match[2]);
+        return ucwords((string) $match[2]);
     }
 }

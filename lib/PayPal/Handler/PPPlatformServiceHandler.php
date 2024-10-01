@@ -1,6 +1,8 @@
 <?php
+
 namespace PayPal\Handler;
 
+use Override;
 use PayPal\Core\PPConstants;
 use PayPal\Core\PPCredentialManager;
 use PayPal\Exception\PPConfigurationException;
@@ -12,18 +14,14 @@ use PayPal\Exception\PPConfigurationException;
  * hit based on configuration parameters.
  *
  */
-class PPPlatformServiceHandler
-  extends PPGenericServiceHandler
+class PPPlatformServiceHandler extends PPGenericServiceHandler
 {
-
-    private $apiUsername;
-
-    public function __construct($apiUsername, $sdkName, $sdkVersion)
+    public function __construct(private $apiUsername, $sdkName, $sdkVersion)
     {
         parent::__construct($sdkName, $sdkVersion);
-        $this->apiUsername = $apiUsername;
     }
 
+    #[Override]
     public function handle($httpConfig, $request, $options)
     {
 
@@ -43,17 +41,17 @@ class PPPlatformServiceHandler
         if ($credential && $credential->getApplicationId() != null) {
             $httpConfig->addHeader('X-PAYPAL-APPLICATION-ID', $credential->getApplicationId());
         }
-        if (isset($config['port']) && isset($config['service.EndPoint.' . $options['port']])) {
+        if (isset($config['port'], $config['service.EndPoint.' . $options['port']])    ) {
             $endpoint = $config['service.EndPoint.' . $options['port']];
         } // for backward compatibilty (for those who are using old config files with 'service.EndPoint')
-        else if (isset($config['service.EndPoint'])) {
+        elseif (isset($config['service.EndPoint'])) {
             $endpoint = $config['service.EndPoint'];
-        } else if (isset($config['mode'])) {
-            if (strtoupper($config['mode']) == 'SANDBOX') {
+        } elseif (isset($config['mode'])) {
+            if (strtoupper((string) $config['mode']) == 'SANDBOX') {
                 $endpoint = PPConstants::PLATFORM_SANDBOX_ENDPOINT;
-            } else if (strtoupper($config['mode']) == 'LIVE') {
+            } elseif (strtoupper((string) $config['mode']) == 'LIVE') {
                 $endpoint = PPConstants::PLATFORM_LIVE_ENDPOINT;
-            } else if (strtoupper($config['mode']) == 'TLS') {
+            } elseif (strtoupper((string) $config['mode']) == 'TLS') {
                 $endpoint = PPConstants::PLATFORM_TLS_ENDPOINT;
             }
         } else {

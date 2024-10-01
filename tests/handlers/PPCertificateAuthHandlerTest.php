@@ -1,116 +1,116 @@
 <?php
+
 use PayPal\Auth\PPCertificateCredential;
 use PayPal\Auth\PPSubjectAuthorization;
 use PayPal\Auth\PPTokenAuthorization;
-use PayPal\Handler\PPCertificateAuthHandler;
 use PayPal\Core\PPHttpConfig;
 use PayPal\Core\PPRequest;
+use PayPal\Handler\PPCertificateAuthHandler;
 use PHPUnit\Framework\TestCase;
 
-class PPCertificateAuthHandlerTest extends TestCase {
+class PPCertificateAuthHandlerTest extends TestCase
+{
+    #[Override]
+    protected function setUp(): void
+    {
 
-	protected function setup() {
+    }
 
-	}
+    #[Override]
+    protected function tearDown(): void
+    {
 
-	protected function tearDown() {
+    }
 
-	}
+    #[PHPUnit\Framework\Attributes\Test]
+    public function testHeadersAddedForNVP()
+    {
 
-	/**
-	 * @test
-	 */
-	public function testHeadersAddedForNVP() {
+        $req = new PPRequest(new stdClass(), 'NV');
+        $options = ['config' => ['mode' => 'sandbox'], 'serviceName' => 'AdaptivePayments', 'apiMethod' => 'ConvertCurrency'];
 
-		$req = new PPRequest(new StdClass(), 'NV');
-		$options = array('config' => array('mode' => 'sandbox'), 'serviceName' => 'AdaptivePayments', 'apiMethod' => 'ConvertCurrency');
+        $handler = new PPCertificateAuthHandler();
 
-		$handler = new PPCertificateAuthHandler();
+        // Test that no headers are added if no credential is passed
+        $httpConfig = new PPHttpConfig();
+        $handler->handle($httpConfig, $req, $options);
+        $this->assertEquals(0, count($httpConfig->getHeaders()));
 
-		// Test that no headers are added if no credential is passed
-		$httpConfig = new PPHttpConfig();
-		$handler->handle($httpConfig, $req, $options);
-		$this->assertEquals(0, count($httpConfig->getHeaders()));
+        // Test that the 3 token headers are added for first party API calls
+        $httpConfig = new PPHttpConfig();
+        $cred = new PPCertificateCredential('user', 'pass', 'cacert.pem');
+        $req->setCredential($cred);
 
-		// Test that the 3 token headers are added for first party API calls
-		$httpConfig = new PPHttpConfig();
-		$cred = new PPCertificateCredential('user', 'pass', 'cacert.pem');
-		$req->setCredential($cred);
+        $handler->handle($httpConfig, $req, $options);
+        $this->assertEquals(2, count($httpConfig->getHeaders()));
+        $this->assertArrayHasKey(CURLOPT_SSLCERT, $httpConfig->getCurlOptions());
 
-		$handler->handle($httpConfig, $req, $options);
-		$this->assertEquals(2, count($httpConfig->getHeaders()));
-		$this->assertArrayHasKey(CURLOPT_SSLCERT, $httpConfig->getCurlOptions());
+        // Test addition of 'subject' HTTP header for subject based third party auth
+        $httpConfig = new PPHttpConfig();
+        $cred = new PPCertificateCredential('user', 'pass', 'cacert.pem');
+        $cred->setThirdPartyAuthorization(new PPSubjectAuthorization('email@paypal.com'));
+        $req->setCredential($cred);
 
-		// Test addition of 'subject' HTTP header for subject based third party auth
-		$httpConfig = new PPHttpConfig();
-		$cred = new PPCertificateCredential('user', 'pass', 'cacert.pem');
-		$cred->setThirdPartyAuthorization(new PPSubjectAuthorization('email@paypal.com'));
-		$req->setCredential($cred);
+        $handler->handle($httpConfig, $req, $options);
+        $this->assertEquals(3, count($httpConfig->getHeaders()));
+        $this->assertArrayHasKey('X-PAYPAL-SECURITY-SUBJECT', $httpConfig->getHeaders());
+        $this->assertArrayHasKey(CURLOPT_SSLCERT, $httpConfig->getCurlOptions());
 
-		$handler->handle($httpConfig, $req, $options);
-		$this->assertEquals(3, count($httpConfig->getHeaders()));
-		$this->assertArrayHasKey('X-PAYPAL-SECURITY-SUBJECT', $httpConfig->getHeaders());
-		$this->assertArrayHasKey(CURLOPT_SSLCERT, $httpConfig->getCurlOptions());
+        // Test that no auth related HTTP headers (username, password, sign?) are
+        // added for token based third party auth
+        $httpConfig = new PPHttpConfig();
+        $req->getCredential()->setThirdPartyAuthorization(new PPTokenAuthorization('token', 'tokenSecret'));
 
-		// Test that no auth related HTTP headers (username, password, sign?) are
-		// added for token based third party auth
-		$httpConfig = new PPHttpConfig();
-		$req->getCredential()->setThirdPartyAuthorization(new PPTokenAuthorization('token', 'tokenSecret'));
+        $handler->handle($httpConfig, $req, $options);
+        $this->assertEquals(0, count($httpConfig->getHeaders()));
+        $this->assertArrayHasKey(CURLOPT_SSLCERT, $httpConfig->getCurlOptions());
 
-		$handler->handle($httpConfig, $req, $options);
-		$this->assertEquals(0, count($httpConfig->getHeaders()));
-		$this->assertArrayHasKey(CURLOPT_SSLCERT, $httpConfig->getCurlOptions());
+    }
 
-	}
+    #[PHPUnit\Framework\Attributes\Test]
+    public function testHeadersAddedForSOAP()
+    {
 
+        $options = ['config' => ['mode' => 'sandbox'], 'serviceName' => 'AdaptivePayments', 'apiMethod' => 'ConvertCurrency'];
+        $req = new PPRequest(new stdClass(), 'SOAP');
 
-	/**
-	 * @test
-	 */
-	public function testHeadersAddedForSOAP() {
+        $handler = new PPCertificateAuthHandler();
 
-		$options = array('config' => array('mode' => 'sandbox'), 'serviceName' => 'AdaptivePayments', 'apiMethod' => 'ConvertCurrency');
-		$req = new PPRequest(new StdClass(), 'SOAP');
+        // Test that no headers are added if no credential is passed
+        $httpConfig = new PPHttpConfig();
+        $handler->handle($httpConfig, $req, $options);
+        $this->assertEquals('', $req->getBindingInfo('securityHeader'));
 
-		$handler = new PPCertificateAuthHandler();
+        // Test that the 3 token SOAP headers are added for first party API calls
+        $req = new PPRequest(new stdClass(), 'SOAP');
+        $req->setCredential(new PPCertificateCredential('user', 'pass', 'cacert.pem'));
+        $handler->handle($httpConfig, $req, $options);
 
-		// Test that no headers are added if no credential is passed
-		$httpConfig = new PPHttpConfig();
-		$handler->handle($httpConfig, $req, $options);
-		$this->assertEquals('', $req->getBindingInfo('securityHeader'));
+        $this->assertStringContainsString('<ebl:Username>', $req->getBindingInfo('securityHeader'));
+        $this->assertStringContainsString('<ebl:Password>', $req->getBindingInfo('securityHeader'));
+        $this->assertArrayHasKey(CURLOPT_SSLCERT, $httpConfig->getCurlOptions());
 
-		// Test that the 3 token SOAP headers are added for first party API calls
-		$req = new PPRequest(new StdClass(), 'SOAP');
-		$req->setCredential(new PPCertificateCredential('user', 'pass', 'cacert.pem'));
-		$handler->handle($httpConfig, $req, $options);
+        // Test addition of 'subject' SOAP header for subject based third party auth
+        $req = new PPRequest(new stdClass(), 'SOAP');
+        $cred = new PPCertificateCredential('user', 'pass', 'cacert.pem');
+        $cred->setThirdPartyAuthorization(new PPSubjectAuthorization('email@paypal.com'));
+        $req->setCredential($cred);
+        $handler->handle($httpConfig, $req, $options);
 
-		$this->assertContains('<ebl:Username>', $req->getBindingInfo('securityHeader'));
-		$this->assertContains('<ebl:Password>', $req->getBindingInfo('securityHeader'));
-		$this->assertArrayHasKey(CURLOPT_SSLCERT, $httpConfig->getCurlOptions());
+        $this->assertStringContainsString('<ebl:Username>', $req->getBindingInfo('securityHeader'));
+        $this->assertStringContainsString('<ebl:Password>', $req->getBindingInfo('securityHeader'));
+        $this->assertStringContainsString('<ebl:Subject>', $req->getBindingInfo('securityHeader'));
+        $this->assertArrayHasKey(CURLOPT_SSLCERT, $httpConfig->getCurlOptions());
 
-		// Test addition of 'subject' SOAP header for subject based third party auth
-		$req = new PPRequest(new StdClass(), 'SOAP');
-		$cred = new PPCertificateCredential('user', 'pass', 'cacert.pem');
-		$cred->setThirdPartyAuthorization(new PPSubjectAuthorization('email@paypal.com'));
-		$req->setCredential($cred);
-		$handler->handle($httpConfig, $req, $options);
+        // Test that no auth related HTTP headers (username, password, sign?) are
+        // added for token based third party auth
+        $req = new PPRequest(new stdClass(), 'SOAP');
+        $req->setCredential(new PPCertificateCredential('user', 'pass', 'cacert.pem'));
+        $req->getCredential()->setThirdPartyAuthorization(new PPTokenAuthorization('token', 'tokenSecret'));
+        $handler->handle($httpConfig, $req, $options);
 
-		$this->assertContains('<ebl:Username>', $req->getBindingInfo('securityHeader'));
-		$this->assertContains('<ebl:Password>', $req->getBindingInfo('securityHeader'));
-		$this->assertContains('<ebl:Subject>', $req->getBindingInfo('securityHeader'));
-		$this->assertArrayHasKey(CURLOPT_SSLCERT, $httpConfig->getCurlOptions());
-
-
-		// Test that no auth related HTTP headers (username, password, sign?) are
-		// added for token based third party auth
-		$req = new PPRequest(new StdClass(), 'SOAP');
-		$req->setCredential(new PPCertificateCredential('user', 'pass', 'cacert.pem'));
-		$req->getCredential()->setThirdPartyAuthorization(new PPTokenAuthorization('token', 'tokenSecret'));
-		$handler->handle($httpConfig, $req, $options);
-
-		$this->assertContains('<ns:RequesterCredentials/>', $req->getBindingInfo('securityHeader'));
-		$this->assertEquals(0, count($httpConfig->getHeaders()));
-		$this->assertArrayHasKey(CURLOPT_SSLCERT, $httpConfig->getCurlOptions());
-	}
-
+        $this->assertStringContainsString('<ns:RequesterCredentials/>', $req->getBindingInfo('securityHeader'));
+        $this->assertEquals(0, count($httpConfig->getHeaders()));
+        $this->assertArrayHasKey(CURLOPT_SSLCERT, $httpConfig->getCurlOptions());
+    }
 }

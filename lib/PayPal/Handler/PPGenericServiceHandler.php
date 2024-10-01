@@ -1,6 +1,8 @@
 <?php
+
 namespace PayPal\Handler;
 
+use Override;
 use PayPal\Common\PPUserAgent;
 use PayPal\Core\PPUtils;
 
@@ -9,19 +11,13 @@ use PayPal\Core\PPUtils;
  * Adds non-authentication headers that are common to PayPal's
  * merchant and platform APIs
  */
-class PPGenericServiceHandler
-  implements IPPHandler
+class PPGenericServiceHandler implements IPPHandler
 {
-
-    private $sdkName;
-    private $sdkVersion;
-
-    public function __construct($sdkName, $sdkVersion)
+    public function __construct(private $sdkName, private $sdkVersion)
     {
-        $this->sdkName    = $sdkName;
-        $this->sdkVersion = $sdkVersion;
     }
 
+    #[Override]
     public function handle($httpConfig, $request, $options)
     {
         $httpConfig->addHeader('X-PAYPAL-REQUEST-DATA-FORMAT', $request->getBindingType());

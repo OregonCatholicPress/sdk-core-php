@@ -1,32 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit bootstrap="./tests/PPBootStrap.php"
-         colors="true"
-         processIsolation="false"
-         syntaxCheck="false"
-         convertErrorsToExceptions="true"
-         convertNoticesToExceptions="true"
-         convertWarningsToExceptions="true" >
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd"
+        bootstrap="./tests/PPBootStrap.php"
+        colors="true"
+        defaultTestSuite="All"
+        cacheDirectory=".phpunit.cache" >
     <testsuites>
         <testsuite name="All">
             <directory>tests</directory>
         </testsuite>
     </testsuites>
-
+    <groups>
+        <exclude>
+            <!-- DO NOT RUN TESTS WITH THESE @group ANNOTATIONS -->
+            <group>defective</group>
+            <group>intermittent</group>
+        </exclude>
+    </groups>
     <logging>
-        <log type="junit" target="build/junit.xml" logIncompleteSkipped="false" />
-        <log type="coverage-html" target="build/coverage/" charset="UTF-8"
-             highlight="true" lowUpperBound="35" highLowerBound="70"/>
-        <log type="coverage-clover" target="build/coverage/clover.xml"/>
+        <junit outputFile="build/junit.xml"/>
     </logging>
-
-    <filter>
-        <whitelist>
-            <directory>./lib</directory>
-            <exclude>
-                <directory>./vendor</directory>
-                <directory>./lib/auth/PPAuth.php</directory>
-                <directory>./lib/auth/AuthUtil.php</directory>
-            </exclude>
-        </whitelist>
-    </filter>
+    <source>
+        <include>
+            <directory suffix=".php">./lib</directory>
+        </include>
+        <exclude>
+            <directory>./vendor</directory>
+            <file>./lib/auth/PPAuth.php</file>
+            <file>./lib/auth/AuthUtil.php</file>
+        </exclude>
+    </source>
 </phpunit>

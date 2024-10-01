@@ -1,4 +1,5 @@
 <?php
+
 namespace PayPal\Auth;
 
 /**
@@ -9,5 +10,4 @@ namespace PayPal\Auth;
  */
 interface IPPThirdPartyAuthorization
 {
-
 }

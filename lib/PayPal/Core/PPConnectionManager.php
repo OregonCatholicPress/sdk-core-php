@@ -1,10 +1,12 @@
 <?php
+
 namespace PayPal\Core;
 
 class PPConnectionManager
 {
     /**
      * reference to singleton instance
+     *
      * @var PPConnectionManager
      */
     private static $instance;
@@ -18,11 +20,15 @@ class PPConnectionManager
         if (self::$instance == null) {
             self::$instance = new PPConnectionManager();
         }
+
         return self::$instance;
     }
 
     /**
      * This function returns a new PPHttpConnection object
+     *
+     * @param mixed $httpConfig
+     * @param mixed $config
      */
     public function getConnection($httpConfig, $config)
     {
@@ -42,5 +48,4 @@ class PPConnectionManager
 
         return new PPHttpConnection($httpConfig, $config);
     }
-
 }

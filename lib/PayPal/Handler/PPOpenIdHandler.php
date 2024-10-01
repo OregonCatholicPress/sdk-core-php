@@ -1,24 +1,25 @@
 <?php
+
 namespace PayPal\Handler;
 
+use Override;
 use PayPal\Common\PPUserAgent;
 use PayPal\Core\PPConstants;
 use PayPal\Exception\PPConfigurationException;
 
-class PPOpenIdHandler
-  implements IPPHandler
+class PPOpenIdHandler implements IPPHandler
 {
-
     private static $sdkName = "openid-sdk-php";
     private static $sdkVersion = "2.5.0";
 
+    #[Override]
     public function handle($httpConfig, $request, $options)
     {
         $apiContext = $options['apiContext'];
         $config     = $apiContext->getConfig();
         $httpConfig->setUrl(
-          rtrim(trim($this->_getEndpoint($config)), '/') .
-          (isset($options['path']) ? $options['path'] : '')
+            rtrim(trim((string) $this->_getEndpoint($config)), '/') .
+          ($options['path'] ?? '')
         );
 
         if (!array_key_exists("Authorization", $httpConfig->getHeaders())) {
@@ -34,19 +35,15 @@ class PPOpenIdHandler
     {
         if (isset($config['openid.EndPoint'])) {
             return $config['openid.EndPoint'];
-        } else if (isset($config['service.EndPoint'])) {
+        } elseif (isset($config['service.EndPoint'])) {
             return $config['service.EndPoint'];
-        } else if (isset($config['mode'])) {
-            switch (strtoupper($config['mode'])) {
-                case 'SANDBOX':
-                    return PPConstants::REST_SANDBOX_ENDPOINT;
-                case 'LIVE':
-                    return PPConstants::REST_LIVE_ENDPOINT;
-                case 'TLS':
-                    return PPConstants::REST_TLS_ENDPOINT;
-                default:
-                    throw new PPConfigurationException('The mode config parameter must be set to either sandbox/live/tls');
-            }
+        } elseif (isset($config['mode'])) {
+            return match (strtoupper((string) $config['mode'])) {
+                'SANDBOX' => PPConstants::REST_SANDBOX_ENDPOINT,
+                'LIVE' => PPConstants::REST_LIVE_ENDPOINT,
+                'TLS' => PPConstants::REST_TLS_ENDPOINT,
+                default => throw new PPConfigurationException('The mode config parameter must be set to either sandbox/live/tls'),
+            };
         } else {
             throw new PPConfigurationException('You must set one of service.endpoint or mode parameters in your configuration');
         }

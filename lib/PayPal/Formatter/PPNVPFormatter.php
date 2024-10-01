@@ -1,17 +1,21 @@
 <?php
+
 namespace PayPal\Formatter;
 
-class PPNVPFormatter
-  implements IPPFormatter
-{
+use BadMethodCallException;
+use Override;
 
-    public function toString($request, $options = array())
+class PPNVPFormatter implements IPPFormatter
+{
+    #[Override]
+    public function toString($request, $options = [])
     {
         return $request->getRequestObject()->toNVPString();
     }
 
-    public function toObject($string, $options = array())
+    #[Override]
+    public function toObject($string, $options = []): never
     {
-        throw new \BadMethodCallException("Unimplemented");
+        throw new BadMethodCallException("Unimplemented");
     }
 }

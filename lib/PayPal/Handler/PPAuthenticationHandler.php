@@ -1,6 +1,8 @@
 <?php
+
 namespace PayPal\Handler;
 
+use Override;
 use PayPal\Auth\Oauth\AuthSignature;
 use PayPal\Auth\PPCertificateCredential;
 use PayPal\Auth\PPSignatureCredential;
@@ -15,19 +17,23 @@ use PayPal\Exception\PPInvalidCredentialException;
  * Also handles PayPal third party authentication (Permissions API).
  *
  */
-class PPAuthenticationHandler
-  implements IPPHandler
+class PPAuthenticationHandler implements IPPHandler
 {
-
+    #[Override]
     public function handle($httpConfig, $request, $options)
     {
         $credential = $request->getCredential();
         if (isset($credential)) {
             $thirdPartyAuth = $credential->getThirdPartyAuthorization();
             if ($thirdPartyAuth && $thirdPartyAuth instanceof PPTokenAuthorization) {
-                $authSignature = AuthSignature::generateFullAuthString($credential->getUsername(),
-                  $credential->getPassword(), $thirdPartyAuth->getAccessToken(), $thirdPartyAuth->getTokenSecret(),
-                  $httpConfig->getMethod(), $httpConfig->getUrl());
+                $authSignature = AuthSignature::generateFullAuthString(
+                    $credential->getUsername(),
+                    $credential->getPassword(),
+                    $thirdPartyAuth->getAccessToken(),
+                    $thirdPartyAuth->getTokenSecret(),
+                    $httpConfig->getMethod(),
+                    $httpConfig->getUrl()
+                );
                 if (isset($options['port']) &&
                   ($options['port'] == 'PayPalAPI' || $options['port'] == 'PayPalAPIAA')
                 ) {
@@ -38,7 +44,7 @@ class PPAuthenticationHandler
             }
             if ($credential instanceof PPSignatureCredential) {
                 $handler = new PPSignatureAuthHandler($credential);
-            } else if ($credential instanceof PPCertificateCredential) {
+            } elseif ($credential instanceof PPCertificateCredential) {
                 $handler = new PPCertificateAuthHandler($credential);
             } else {
                 throw new PPInvalidCredentialException();

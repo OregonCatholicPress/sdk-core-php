@@ -1,6 +1,8 @@
 <?php
+
 namespace PayPal\Handler;
 
+use Override;
 use PayPal\Auth\PPSubjectAuthorization;
 use PayPal\Auth\PPTokenAuthorization;
 
@@ -9,10 +11,9 @@ use PayPal\Auth\PPTokenAuthorization;
  * Adds authentication headers (Platform/Merchant) that are
  * specific to PayPal's 3-token credentials
  */
-class PPSignatureAuthHandler
-  implements IPPHandler
+class PPSignatureAuthHandler implements IPPHandler
 {
-
+    #[Override]
     public function handle($httpConfig, $request, $options)
     {
 
@@ -33,6 +34,7 @@ class PPSignatureAuthHandler
                     }
                 }
                 break;
+
             case 'SOAP':
                 if ($thirdPartyAuth && $thirdPartyAuth instanceof PPTokenAuthorization) {
                     $request->addBindingInfo('securityHeader', '<ns:RequesterCredentials/>');
@@ -50,5 +52,4 @@ class PPSignatureAuthHandler
                 break;
         }
     }
-
 }

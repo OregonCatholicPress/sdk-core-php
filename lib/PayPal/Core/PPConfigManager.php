@@ -1,4 +1,5 @@
 <?php
+
 namespace PayPal\Core;
 
 /**
@@ -7,15 +8,10 @@ namespace PayPal\Core;
  */
 class PPConfigManager
 {
-
     private $config;
 
     //default config values
-    public static $defaults = array(
-      "http.ConnectionTimeOut" => "30",
-      "http.TimeOut"           => "60",
-      "http.Retry"             => "5",
-    );
+    public static $defaults = ["http.ConnectionTimeOut" => "30", "http.TimeOut"           => "60", "http.Retry"             => "5"];
 
     /**
      * @var PPConfigManager
@@ -32,8 +28,10 @@ class PPConfigManager
                 $configFile = PP_CONFIG_PATH . DIRECTORY_SEPARATOR . 'sdk_config.ini';
             }
         } else {
-            $configFile = implode(DIRECTORY_SEPARATOR,
-              array(dirname(__FILE__), "..", "config", "sdk_config.ini"));
+            $configFile = implode(
+                DIRECTORY_SEPARATOR,
+                [__DIR__, "..", "config", "sdk_config.ini"]
+            );
         }
         if (!is_null($configFile) && file_exists($configFile)) {
             $this->load($configFile);
@@ -46,6 +44,7 @@ class PPConfigManager
         if (!isset(self::$instance)) {
             self::$instance = new PPConfigManager();
         }
+
         return self::$instance;
     }
 
@@ -57,7 +56,7 @@ class PPConfigManager
         if (!empty($parsedConfig)) {
             $this->config = $parsedConfig;
         } else {
-            $this->config = array();
+            $this->config = [];
         }
     }
 
@@ -65,22 +64,24 @@ class PPConfigManager
      * simple getter for configuration params
      * If an exact match for key is not found,
      * does a "contains" search on the key
+     *
+     * @param mixed $searchKey
      */
     public function get($searchKey)
     {
 
         if (array_key_exists($searchKey, $this->config)) {
             return $this->config[$searchKey];
-        } else {
-            $arr = array();
-            foreach ($this->config as $k => $v) {
-                if (strstr($k, $searchKey)) {
-                    $arr[$k] = $v;
-                }
-            }
-
-            return $arr;
         }
+        $arr = [];
+        foreach ($this->config as $k => $v) {
+            if (strstr((string) $k, (string) $searchKey)) {
+                $arr[$k] = $v;
+            }
+        }
+
+        return $arr;
+
     }
 
     /**
@@ -89,26 +90,29 @@ class PPConfigManager
      *
      * If $userId is null, returns config keys corresponding to
      * all configured accounts
+     *
+     * @param null|mixed $userId
      */
     public function getIniPrefix($userId = null)
     {
 
         if ($userId == null) {
-            $arr = array();
+            $arr = [];
             foreach ($this->config as $key => $value) {
-                $pos = strpos($key, '.');
-                if (strstr($key, "acct")) {
-                    $arr[] = substr($key, 0, $pos);
+                $pos = strpos((string) $key, '.');
+                if (strstr((string) $key, "acct")) {
+                    $arr[] = substr((string) $key, 0, $pos);
                 }
             }
-            return array_unique($arr);
-        } else {
-            $iniPrefix = array_search($userId, $this->config);
-            $pos       = strpos($iniPrefix, '.');
-            $acct      = substr($iniPrefix, 0, $pos);
 
-            return $acct;
+            return array_unique($arr);
         }
+        $iniPrefix = array_search($userId, $this->config);
+        $pos       = strpos((string) $iniPrefix, '.');
+        $acct      = substr((string) $iniPrefix, 0, $pos);
+
+        return $acct;
+
     }
 
     /**
@@ -122,11 +126,18 @@ class PPConfigManager
 
     /**
      * use  the default configuration if it is not passed in hashmap
+     *
+     * @param null|mixed $config
      */
     public static function getConfigWithDefaults($config = null)
     {
-        if (!is_array(PPConfigManager::getInstance()->getConfigHashmap()) && $config == null) return PPConfigManager::$defaults;
-        return array_merge(PPConfigManager::$defaults,
-          ($config != null) ? $config : PPConfigManager::getInstance()->getConfigHashmap());
+        if (!is_array(PPConfigManager::getInstance()->getConfigHashmap()) && $config == null) {
+            return PPConfigManager::$defaults;
+        }
+
+        return array_merge(
+            PPConfigManager::$defaults,
+            ($config != null) ? $config : PPConfigManager::getInstance()->getConfigHashmap()
+        );
     }
 }

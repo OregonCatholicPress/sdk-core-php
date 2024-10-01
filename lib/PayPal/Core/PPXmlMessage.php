@@ -1,4 +1,5 @@
 <?php
+
 namespace PayPal\Core;
 
 use PayPal\Exception\PPTransformerException;
@@ -8,7 +9,6 @@ use PayPal\Exception\PPTransformerException;
  */
 abstract class PPXmlMessage
 {
-
     /**
      * @return string
      */
@@ -22,7 +22,7 @@ abstract class PPXmlMessage
      */
     public function toXMLString()
     {
-        $attributes = array();
+        $attributes = [];
         $properties = get_object_vars($this);
         foreach (array_keys($properties) as $property) {
             if (($annots = PPUtils::propertyAnnotations($this, $property)) && isset($annots['attribute'])) {
@@ -35,7 +35,7 @@ abstract class PPXmlMessage
         }
         $attrs = implode(' ', $attributes) . (count($attributes) > 0 ? ">" : "");
 
-        $xml = array();
+        $xml = [];
         foreach ($properties as $property => $defaultValue) {
             if (($propertyValue = $this->{$property}) === null || $propertyValue == null) {
                 continue;
@@ -61,7 +61,7 @@ abstract class PPXmlMessage
             }
         }
 
-        return $attrs . implode($xml);
+        return $attrs . implode('', $xml);
     }
 
     /**
@@ -89,7 +89,7 @@ abstract class PPXmlMessage
         if (!is_object($value)) {
             $el .= '>' . PPUtils::escapeInvalidXmlCharsRegex($value);
         } else {
-            if (substr($value = $value->toXMLString(), 0, 1) === '<' || $value == '') {
+            if (str_starts_with($value = $value->toXMLString(), '<') || $value == '') {
                 $el .= '>' . $value;
             } else {
                 $el .= ' ' . $value;
@@ -97,41 +97,37 @@ abstract class PPXmlMessage
         }
         if ($namespace === true) {
             return $el . '</' . $property . '>';
-        } else {
-            return $el . '</' . $namespace . ':' . $property . '>';
         }
+
+        return $el . '</' . $namespace . ':' . $property . '>';
+
     }
 
     /**
      * @param array  $map    intermediate array representation of XML message to deserialize
      * @param string $isRoot true if this is a root class for SOAP deserialization
      */
-    public function init(array $map = array(), $isRoot = true)
+    public function init(array $map = [], $isRoot = true)
     {
         if ($isRoot) {
-            if (stristr($map[0]['name'], ":fault")) {
+            if (stristr((string) $map[0]['name'], ":fault")) {
                 throw new PPTransformerException("soapfault");
-            } else {
-                $map = $map[0]['children'];
             }
+            $map = $map[0]['children'];
+
         }
 
         if (empty($map)) {
             return;
         }
 
-        if (($first = reset($map)) && !is_array($first) && !is_numeric(key($map))) {
-            parent::init($map, false);
-            return;
-        }
-
         $propertiesMap = PPUtils::objectProperties($this);
-        $arrayCtr      = array();
+        $arrayCtr      = [];
         foreach ($map as $element) {
 
             if (empty($element) || empty($element['name'])) {
                 continue;
-            } elseif (!array_key_exists($property = strtolower($element['name']), $propertiesMap)) {
+            } elseif (!array_key_exists($property = strtolower((string) $element['name']), $propertiesMap)) {
                 if (!preg_match('~^(.+)[\[\(](\d+)[\]\)]$~', $property, $m)) {
                     continue;
                 }
@@ -139,24 +135,18 @@ abstract class PPXmlMessage
                 $element['name'] = $m[1];
                 $element['num']  = $m[2];
             }
-            $element['name'] = $propertiesMap[strtolower($element['name'])];
+            $element['name'] = $propertiesMap[strtolower((string) $element['name'])];
             if (PPUtils::isPropertyArray($this, $element['name'])) {
                 $arrayCtr[$element['name']] = isset($arrayCtr[$element['name']]) ? ($arrayCtr[$element['name']] + 1) : 0;
                 $element['num']             = $arrayCtr[$element['name']];
             }
             if (!empty($element["attributes"]) && is_array($element["attributes"])) {
                 foreach ($element["attributes"] as $key => $val) {
-                    $element["children"][] = array(
-                      'name' => $key,
-                      'text' => $val,
-                    );
+                    $element["children"][] = ['name' => $key, 'text' => $val];
                 }
 
                 if (isset($element['text'])) {
-                    $element["children"][] = array(
-                      'name' => 'value',
-                      'text' => $element['text'],
-                    );
+                    $element["children"][] = ['name' => 'value', 'text' => $element['text']];
                 }
 
                 $this->fillRelation($element['name'], $element);
@@ -180,6 +170,7 @@ abstract class PPXmlMessage
     {
         if (!class_exists($type = PPUtils::propertyType($this, $property))) {
             trigger_error("Class $type not found.", E_USER_NOTICE);
+
             return; // just ignore
         }
 
@@ -191,5 +182,4 @@ abstract class PPXmlMessage
             $this->{$property}->init($element["children"], false);
         }
     }
-
 }

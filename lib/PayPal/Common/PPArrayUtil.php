@@ -1,9 +1,9 @@
 <?php
+
 namespace PayPal\Common;
 
 class PPArrayUtil
 {
-
     /**
      *
      * @param array $arr
@@ -17,6 +17,7 @@ class PPArrayUtil
                 return false;
             }
         }
+
         return true;
     }
 }

@@ -1,5 +1,8 @@
 <?php
+
 namespace PayPal\Auth\Oauth;
+
+use Override;
 
 /**
  * The RSA-SHA1 signature method uses the RSASSA-PKCS1-v1_5 signature algorithm as defined in
@@ -9,9 +12,9 @@ namespace PayPal\Auth\Oauth;
  * specification.
  *   - Chapter 9.3 ("RSA-SHA1")
  */
-abstract class OAuthSignatureMethodRsaSha1
-  extends OAuthSignatureMethod
+abstract class OAuthSignatureMethodRsaSha1 extends OAuthSignatureMethod
 {
+    #[Override]
     public function get_name()
     {
         return "RSA-SHA1";
@@ -23,14 +26,15 @@ abstract class OAuthSignatureMethodRsaSha1
     // (3) some sort of specific discovery code based on request
     //
     // Either way should return a string representation of the certificate
-    protected abstract function fetch_public_cert(&$request);
+    abstract protected function fetch_public_cert(&$request);
 
     // Up to the SP to implement this lookup of keys. Possible ideas are:
     // (1) do a lookup in a table of trusted certs keyed off of consumer
     //
     // Either way should return a string representation of the certificate
-    protected abstract function fetch_private_cert(&$request);
+    abstract protected function fetch_private_cert(&$request);
 
+    #[Override]
     public function build_signature($request, $consumer, $token)
     {
         $base_string          = $request->get_signature_base_string();
@@ -48,9 +52,10 @@ abstract class OAuthSignatureMethodRsaSha1
         // Release the key resource
         openssl_free_key($privatekeyid);
 
-        return base64_encode($signature);
+        return base64_encode((string) $signature);
     }
 
+    #[Override]
     public function check_signature($request, $consumer, $token, $signature)
     {
         $decoded_sig = base64_decode($signature);

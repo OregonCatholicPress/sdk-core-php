@@ -1,9 +1,13 @@
 <?php
+
 namespace PayPal\Core;
+
+use DOMDocument;
+use DOMText;
+use Exception;
 
 class PPUtils
 {
-
     /**
      *
      * Convert a Name Value Pair (NVP) formatted string into
@@ -15,12 +19,13 @@ class PPUtils
      */
     public static function nvpToMap($nvpString)
     {
-        $ret    = array();
+        $ret    = [];
         $params = explode("&", $nvpString);
         foreach ($params as $p) {
-            list($k, $v) = explode("=", $p);
+            [$k, $v] = explode("=", $p);
             $ret[$k] = urldecode($v);
         }
+
         return $ret;
     }
 
@@ -34,15 +39,7 @@ class PPUtils
      */
     public static function array_match_key($map, $key)
     {
-        $replace = str_replace(array(
-          '(',
-          ')',
-          '.'
-        ), array(
-          '\(',
-          '\)',
-          '\.'
-        ), $key);
+        $replace = str_replace(['(', ')', '.'], ['\(', '\)', '\.'], $key);
 
         $pattern = "/$replace*/";
 
@@ -52,6 +49,7 @@ class PPUtils
                 return true;
             }
         }
+
         return false;
     }
 
@@ -64,12 +62,13 @@ class PPUtils
         if (array_key_exists("SERVER_ADDR", $_SERVER) && self::isIPv4($_SERVER['SERVER_ADDR'])) {
             // SERVER_ADDR is available only if we are running the CGI SAPI
             return $_SERVER['SERVER_ADDR'];
-        } else if (function_exists("gethostname") && self::isIPv4(gethostbyname(gethostname()))) {
+        } elseif (function_exists("gethostname") && self::isIPv4(gethostbyname(gethostname()))) {
             return gethostbyname(gethostname());
-        } else {
-            // fallback if nothing works
-            return "127.0.0.1";
         }
+
+        // fallback if nothing works
+        return "127.0.0.1";
+
     }
 
     /**
@@ -92,17 +91,18 @@ class PPUtils
      */
     public static function xmlToArray($xmlInput)
     {
-        $doc                     = new \DOMDocument();
+        $doc                     = new DOMDocument();
         $doc->preserveWhiteSpace = false;
         $doc->loadXML($xmlInput);
 
         $results = $doc->getElementsByTagName("Body");
         if ($results->length > 0) {
             $node = $results->item(0);
+
             return PPUtils::xmlNodeToArray($node);
-        } else {
-            throw new \Exception("Unrecognized response payload ");
         }
+        throw new Exception("Unrecognized response payload ");
+
     }
 
     /**
@@ -113,14 +113,14 @@ class PPUtils
      */
     private static function xmlNodeToArray($node)
     {
-        $result = array();
+        $result = [];
 
         $children = $node->childNodes;
         if (!empty($children)) {
-            for ($i = 0; $i < (int)$children->length; $i++) {
+            for ($i = 0; $i < (int) $children->length; $i++) {
                 $child = $children->item($i);
                 if ($child !== null) {
-                    if ($child->childNodes->item(0) instanceof \DOMText) {
+                    if ($child->childNodes->item(0) instanceof DOMText) {
                         $result[$i]['name'] = $child->nodeName;
                         $result[$i]['text'] = $child->childNodes->item(0)->nodeValue;
                         if ($child->hasAttributes()) {
@@ -130,7 +130,7 @@ class PPUtils
                                 }
                             }
                         }
-                    } else if (!in_array($child->nodeName, $result)) {
+                    } elseif (!in_array($child->nodeName, $result)) {
                         $result[$i]['name']     = $child->nodeName;
                         $result[$i]['children'] = PPUtils::xmlNodeToArray($child);
 
@@ -147,6 +147,7 @@ class PPUtils
                 }
             }
         }
+
         return $result;
     }
 
@@ -159,7 +160,7 @@ class PPUtils
      */
     public static function escapeInvalidXmlCharsRegex($textContent)
     {
-        return htmlspecialchars($textContent, (1 | 2), 'UTF-8', false);
+        return htmlspecialchars((string) $textContent, (1 | 2), 'UTF-8', false);
     }
 
     /**
@@ -172,7 +173,7 @@ class PPUtils
      */
     public static function filterKeyPrefix(array $map, $keyPrefix)
     {
-        $filtered = array();
+        $filtered = [];
         foreach ($map as $key => $val) {
             if (($pos = stripos($key, $keyPrefix)) !== 0) {
                 continue;
@@ -187,12 +188,12 @@ class PPUtils
     /**
      * @var array|ReflectionProperty[]
      */
-    private static $propertiesRefl = array();
+    private static $propertiesRefl = [];
 
     /**
      * @var array|string[]
      */
-    private static $propertiesType = array();
+    private static $propertiesType = [];
 
     /**
      * Get property annotations for a certain property in a class
@@ -201,11 +202,12 @@ class PPUtils
      * @param string $propertyName
      *
      * @throws RuntimeException
+     *
      * @return string
      */
     public static function propertyAnnotations($class, $propertyName)
     {
-        $class = is_object($class) ? get_class($class) : $class;
+        $class = is_object($class) ? $class::class : $class;
         if (!class_exists('ReflectionProperty')) {
             throw new \RuntimeException("Property type of " . $class . "::{$propertyName} cannot be resolved");
         }
@@ -219,8 +221,12 @@ class PPUtils
         }
 
         // todo: smarter regexp
-        if (!preg_match_all('~\@([^\s@\(]+)[\t ]*(?:\(?([^\n@]+)\)?)?~i', $refl->getDocComment(), $annots,
-          PREG_PATTERN_ORDER)
+        if (!preg_match_all(
+            '~\@([^\s@\(]+)[\t ]*(?:\(?([^\n@]+)\)?)?~i',
+            (string) $refl->getDocComment(),
+            $annots,
+            PREG_PATTERN_ORDER
+        )
         ) {
             return null;
         }
@@ -245,6 +251,7 @@ class PPUtils
         if (($annotations = self::propertyAnnotations($class, $propertyName))) {
             return array_key_exists('attribute', $annotations);
         }
+
         return false;
     }
 
@@ -260,7 +267,7 @@ class PPUtils
     public static function isPropertyArray($class, $propertyName)
     {
         if (($annotations = self::propertyAnnotations($class, $propertyName))) {
-            if (isset($annotations['var']) && substr($annotations['var'], -2) === '[]') {
+            if (isset($annotations['var']) && str_ends_with($annotations['var'], '[]')) {
                 return true;
             } elseif (isset($annotations['array'])) {
                 return true;
@@ -277,12 +284,13 @@ class PPUtils
      * @param string $propertyName
      *
      * @throws RuntimeException
+     *
      * @return string
      */
     public static function propertyType($class, $propertyName)
     {
         if (($annotations = self::propertyAnnotations($class, $propertyName)) && isset($annotations['var'])) {
-            if (substr($annotations['var'], -2) === '[]') {
+            if (str_ends_with($annotations['var'], '[]')) {
                 return substr($annotations['var'], 0, -2);
             }
 
@@ -300,7 +308,7 @@ class PPUtils
      */
     public static function objectProperties($object)
     {
-        $props = array();
+        $props = [];
         foreach (get_object_vars($object) as $property => $default) {
             $annotations = self::propertyAnnotations($object, $property);
             if (isset($annotations['name'])) {
@@ -322,12 +330,11 @@ class PPUtils
      */
     public static function lowerKeys(array $array)
     {
-        $ret = array();
+        $ret = [];
         foreach ($array as $key => $value) {
             $ret[strtolower($key)] = $value;
         }
 
         return $ret;
     }
-
 }

@@ -1,45 +1,43 @@
 <?php
+
 namespace PayPal\Auth;
 
+use Override;
 use PayPal\Exception\PPMissingCredentialException;
 
 /**
  *
  * Client certificate based credentials
  */
-class PPCertificateCredential
-  extends IPPCredential
+class PPCertificateCredential extends IPPCredential
 {
-
     /**
      * API username
+     *
      * @var string
      */
     protected $userName;
 
     /**
      * API password
+     *
      * @var string
      */
     protected $password;
 
     /**
      * Path to PEM encoded API certificate on local filesystem
+     *
      * @var string
      */
     protected $certificatePath;
-
-    /**
-     * Password used to protect the API certificate
-     * @var string
-     */
-    protected $certificatePassPhrase;
 
     /**
      * Application Id that uniquely identifies an application that uses the
      * Platform APIs - Not required for Express Checkout / MassPay / DCC etc
      * The application Id is issued by PayPal.
      * Test application Ids are available for the sandbox environment
+     *
      * @var string
      */
     protected $applicationId;
@@ -52,15 +50,18 @@ class PPCertificateCredential
      * @param string $certPath              Path to PEM encoded client certificate file
      * @param string $certificatePassPhrase password need to use the certificate
      */
-    public function __construct($userName, $password, $certPath, $certificatePassPhrase = null)
+    public function __construct($userName, $password, $certPath, /**
+     * Password used to protect the API certificate
+     */
+        protected $certificatePassPhrase = null)
     {
         $this->userName              = trim($userName);
         $this->password              = trim($password);
         $this->certificatePath       = trim($certPath);
-        $this->certificatePassPhrase = $certificatePassPhrase;
         $this->validate();
     }
 
+    #[Override]
     public function validate()
     {
 
@@ -89,11 +90,12 @@ class PPCertificateCredential
     {
         if (realpath($this->certificatePath)) {
             return realpath($this->certificatePath);
-        } else if (defined('PP_CONFIG_PATH')) {
+        } elseif (defined('PP_CONFIG_PATH')) {
             return constant('PP_CONFIG_PATH') . DIRECTORY_SEPARATOR . $this->certificatePath;
-        } else {
-            return realpath(dirname(__FILE__) . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR . "config" . DIRECTORY_SEPARATOR . $this->certificatePath);
         }
+
+        return realpath(__DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR . "config" . DIRECTORY_SEPARATOR . $this->certificatePath);
+
     }
 
     public function getCertificatePassPhrase()
@@ -103,12 +105,11 @@ class PPCertificateCredential
 
     public function setApplicationId($applicationId)
     {
-        $this->applicationId = trim($applicationId);
+        $this->applicationId = trim((string) $applicationId);
     }
 
     public function getApplicationId()
     {
         return $this->applicationId;
     }
-
 }
